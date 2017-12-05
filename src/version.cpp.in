@@ -1,0 +1,28 @@
+#include "version.h"
+
+#define MACRO_VALUE_LITERAL(arg)  MACRO_NAME(arg)
+#define MACRO_NAME(arg) #arg
+
+namespace display
+{
+
+const std::string Version::project_name = MACRO_VALUE_LITERAL(@PROJECT_NAME@);
+
+const unsigned int Version::major = @VERSION_MAJOR@;
+
+const unsigned int Version::minor = @VERSION_MINOR@;
+
+const unsigned int Version::patch = @VERSION_PATCH@;
+
+const std::string Version::str=
+	std::string( MACRO_VALUE_LITERAL( @VERSION_MAJOR@ ) ) + "." +
+	std::string( MACRO_VALUE_LITERAL( @VERSION_MINOR@ ) ) + "." +
+	std::string( MACRO_VALUE_LITERAL( @VERSION_PATCH@ ) );
+
+const std::string Version::build_date = __DATE__;
+
+const std::string Version::git_tag = MACRO_VALUE_LITERAL(@GIT_TAG@);
+
+const std::string Version::commit_hash = MACRO_VALUE_LITERAL( @COMMIT_HASH@ );
+
+} //namespace display
