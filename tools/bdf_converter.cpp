@@ -113,14 +113,14 @@ private:
 		void run()
 		{
 			output
-				<< "\tstatic constexpr char bitmap["<< height << "][" << (width*2+1) << "] = {\n";
+				<< "\tusing bit_map = decltype(\n";
 			const auto lines = get_bitmap_lines();
 
 			for(unsigned int i=0; i<lines.size(); ++i)
 			{
 				output
 					<< "\t\t\"" << lines[i] << "\""
-					<< ((i<lines.size()-1) ? ",\n" : "};\n");
+					<< ((i<lines.size()-1) ? "\n" : "_make_bitmap);\n");
 			}
 		}
 	};
@@ -175,10 +175,10 @@ private:
 		{
 			if(is_unique(name))
 			{
-				parsed_glyphes.insert(name);
-				output
-					<< "template<>\n struct " << font_name << "::Glyphe<" << ">" << nl
-					<< "{\n";
+				//parsed_glyphes.insert(name);
+				// output
+				// 	<< "template<>\nstruct " << font_name << "::Glyphe<" << ">" << nl
+				// 	<< "{\n";
 				char buffer[200] = {0};
 				do
 				{
@@ -222,15 +222,19 @@ private:
 				}
 
 				output
-					<< "\tusing encoding = type::Encoding<"
-					<< encoding
-					<< ">;\n";
+					<< "template<>\nstruct " << font_name << "::Glyphe<" << encoding<< ">" << nl
+					<< "{\n";
+
+				// output
+				// 	<< "\tusing encoding = type::Encoding<"
+				// 	<< encoding
+				// 	<< ">;\n";
 			}
 			else if(starts_with(line, "DWIDTH"))
 			{
 				d_width = atoi(line.c_str()+7);
 				output
-					<< "\tusing next = = type::Constant<uint8_t, "
+					<< "\tusing next = Constant<"
 					<< d_width << ">;\n";
 			}
 			else if(starts_with(line, "SWIDTH"))
@@ -244,10 +248,10 @@ private:
 				y_offset = strtol(end, &end, 10);
 
 				output
-					<< "\tusing width = type::Constant<uint8_t, " << width << ">;\n"
-					<< "\tusing height = type::Constant<uint8_t, " << height << ">;\n"
-					<< "\tusing x = type::Constant<uint8_t, " << x_offset << ">;\n"
-					<< "\tusing y = type::Constant<uint8_t, " << y_offset << ">;\n";
+					<< "\tusing width = Constant<" << width << ">;\n"
+					<< "\tusing height = Constant<" << height << ">;\n"
+					<< "\tusing x = Constant<" << x_offset << ">;\n"
+					<< "\tusing y = Constant<" << y_offset << ">;\n";
 			}
 			else if(starts_with(line, "BITMAP"))
 			{
@@ -308,11 +312,21 @@ private:
 				<< "{\n\n"
 				<< "namespace font\n"
 				<< "{\n\n"
+				<< "template<int8_t I>\n"
+				<< "using Constant = type::Constant<int8_t, I>;\n"
+				<< "using namespace pixel_display::literals;\n"
+				<< nl
 				<< "struct " << family_name << weight << pixel_size << nl
 				<< "{\n"
 				<< nl
-				<< "template<class T>\n"
-				<< "struct lockup;\n"
+				<< "template<int I>\n"
+				<< "struct Glyphe;\n\n"
+				<< "};\n\n"
+				<< "template<int I>\n"
+				<< "static constexpr int get_encoding(Glyphe<I>)\n"
+				<< "{\n"
+				<< "	return I;\n"
+				<< "}\n"
 				<< nl;
 
 			current_state = &BdfConverter::chars_;
@@ -347,8 +361,7 @@ public:
 		output
 			<< "#pragma once\n"
 			<< "#include <pixel_display/type/encoding.h>\n"
-			<< "#include <pixel_display/type/size.h>\n"
-			<< "#include <pixel_display/type/point.h>\n"
+			<< "#include <pixel_display/type/bit_map.h>\n"
 			<< nl;
 
 		char buffer[200] = {0};
@@ -359,8 +372,6 @@ public:
 		}
 
 		output
-			<< nl
-			<< "};\n"
 			<< nl
 			<< "} //namespace font\n"
 			<< nl

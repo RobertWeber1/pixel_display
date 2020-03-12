@@ -178,19 +178,19 @@ struct Dimension
 template<class T, class TAG>
 Dimension<T, TAG> operator*(Dimension<T, TAG> const& dim, int scalar)
 {
-	return Dimension<T, TAG>{dim.value * scalar};
+	return Dimension<T, TAG>{static_cast<T>(dim.value * scalar)};
 }
 
 template<class T, class TAG>
 Dimension<T, TAG> operator/(Dimension<T, TAG> const& dim, int divisor)
 {
-	return Dimension<T, TAG>{dim.value / divisor};
+	return Dimension<T, TAG>{static_cast<T>(dim.value / divisor)};
 }
 
 template<class T, class TAG>
 Dimension<T, TAG> operator%(Dimension<T, TAG> const& dim, int divisor)
 {
-	return Dimension<T, TAG>{dim.value % divisor};
+	return Dimension<T, TAG>{static_cast<T>(dim.value % divisor)};
 }
 
 

@@ -2,7 +2,9 @@
 #include <pixel_display/font_table.h>
 #include <pixel_display/type/encoding.h>
 #include <pixel_display/type/dimensions.h>
-// #include <pixel_display/fonts/helvR14.h>
+#include <pixel_display/fonts/helvR14.h>
+#include <pixel_display/type/bit_map.h>
+
 using namespace pixel_display;
 
 
@@ -29,15 +31,16 @@ std::ostream& operator<<(std::ostream & os, Pair<T1, T2> const& pair)
 }
 }
 
+using type::BitMap;
+using namespace literals;
+// template <char... Cs>
+// struct BitMap
+// {
+// 	enum {byte_count = sizeof ... (Cs)};
+// };
 
-template <char... Cs>
-struct BitMap
-{
-	enum {byte_count = sizeof ... (Cs)};
-};
-
-template <class T, T ... Cs>
-BitMap<Cs...> operator "" _make_bitmap();
+// template <class T, T ... Cs>
+// BitMap<Cs...> operator "" _make_bitmap();
 
 namespace
 {
@@ -47,6 +50,12 @@ struct TestFont
 
 template<int I>
 struct Glyphe;
+
+template<int I>
+static constexpr int get_encoding(Glyphe<I>)
+{
+	return I;
+}
 
 };
 
@@ -137,10 +146,15 @@ struct TestFont::Glyphe<41>
 
 //------------------------------------------------------------------------------
 
-template<template<class ...>class EncodingStrategy, class ... GLYPHES>
-struct TestFontTable : EncodingStrategy<GLYPHES...>
+template<class Font, template<class ...>class EncodingStrategy, class ... GLYPHES>
+struct TestFontTable : EncodingStrategy<Font, GLYPHES...>
 {
-	using Data_t = EncodingStrategy<GLYPHES...>;
+	using Data_t = EncodingStrategy<Font, GLYPHES...>;
+
+	static size_t data_size()
+	{
+		return sizeof(Data_t::glyph_data);
+	}
 
 	static size_t count()
 	{
@@ -171,11 +185,10 @@ struct TestFontTable : EncodingStrategy<GLYPHES...>
 		Output & output)
 	{
 		auto const& info = Data_t::get(code_point);
-		// auto rel_point = type::Point{(pos.get<type::X>() + info.dx)%8, type::Y{4}};
 
 		auto const top_left_corner =
 			pos +
-			type::Point{type::X{info.dx}, type::Y{info.height+info.dy-1}};
+			type::Point{type::X{info.dx}, type::Y{static_cast<int16_t>(info.height+info.dy-1)}};
 
 		auto const byte_index =
 			type::Point{
@@ -189,7 +202,7 @@ struct TestFontTable : EncodingStrategy<GLYPHES...>
 
 		auto const mask = Data_t::get_glyphe_mask(info, byte_offset);
 
-		for(int i = 0; i < info.height; ++i)
+		for(int16_t i = 0; i < info.height; ++i)
 		{
 			output.set(
 				Data_t::get_glype_line(info, type::Point{top_left_corner.get<type::X>()%8,type::Y{i}}) &
@@ -215,6 +228,7 @@ struct TestFontTable : EncodingStrategy<GLYPHES...>
 template<class F, template<class ...>class Strategy, int ... CodePoints>
 using MakeFontTable =
 	TestFontTable<
+		F,
 		Strategy,
 		typename F::template Glyphe<CodePoints> ... >;
 
@@ -255,11 +269,12 @@ constexpr int get_encoding(TestFont::Glyphe<I>)
 	return I;
 }
 
-template<class GlyphInfo, class T>
+template<class Font, class GlyphInfo, class T>
 constexpr GlyphInfo make_info(size_t offset)
 {
+
 	return {
-		get_encoding(T{}),
+		Font::template get_encoding(T{}),
 		static_cast<uint16_t>(offset),
 		T::width::value(),
 		T::height::value(),
@@ -324,66 +339,13 @@ std::ostream& operator<<(std::ostream & os, Data<N> const& in)
 
 //------------------------------------------------------------------------------
 
+
 constexpr size_t calc_size(size_t n)
 {
-	return n/16 + ((n%16 != 0) ? 1 : 0);
+	size_t i = n/2;
+	return i/8 + ((i%8 != 0) ? 1 : 0);
 }
 
-constexpr size_t cat_calc_size(size_t n, size_t glyphe_count)
-{
-	const auto i = n - (glyphe_count-1);
-	return i/16 + ((i%16 != 0) ? 1 : 0);
-}
-
-
-template<size_t Count, char ... Cs>
-constexpr Data<cat_calc_size(sizeof...(Cs), Count)> encode(BitMap<Cs...>)
-{
-	Data<cat_calc_size(sizeof...(Cs), Count)> buffer;
-	char data[] = {Cs...};
-
-	int byte_count = 0;
-	unsigned int bit_count = 0;
-	uint8_t result = 0;
-	bool written = false;
-
-	for(size_t in = 0; in<sizeof...(Cs); in+=2)
-	{
-		written = false;
-
-		if(data[in] == '|')
-		{
-			buffer.data[byte_count] = result;
-			bit_count = 0;
-			result = 0;
-			++byte_count;
-			written = true;
-			continue;
-		}
-
-		if(data[in] != ' ')
-		{
-			result |= 1<<bit_count;
-		}
-		++bit_count;
-
-		if(bit_count == 8)
-		{
-			buffer.data[byte_count] = result;
-			bit_count = 0;
-			result = 0;
-			++byte_count;
-			written = true;
-		}
-	}
-
-	if(not written)
-	{
-		buffer.data[byte_count] = result;
-	}
-
-	return buffer;
-}
 
 template<class ... GLYPHES>
 constexpr size_t byte_count()
@@ -453,7 +415,7 @@ struct bitmap_cat;
 template<char ... A, char ... B>
 struct bitmap_cat<BitMap<A ...>, BitMap<B ...>>
 {
-	using type = BitMap<A ..., '|', B ... >;
+	using type = BitMap<A ..., '|', '|', B ... >;
 };
 
 template<class A, class B>
@@ -464,10 +426,10 @@ using bitmap_cat_t = typename bitmap_cat<A, B>::type;
 template<class ...>
 struct flatten;
 
-template<class BitMap>
-struct flatten<BitMap>
+template<class BM>
+struct flatten<BM>
 {
-	using type = BitMap;
+	using type = BM;
 };
 
 template<class First, class Second, class ... Rest>
@@ -480,6 +442,73 @@ using flatten_t = typename flatten<typename GLYPHES::bit_map ...>::type;
 
 //------------------------------------------------------------------------------
 
+
+template<size_t Size, char ... Cs>
+constexpr Data<Size> encode_(BitMap<Cs...>)
+{
+	Data<Size> buffer;
+	char data[] = {Cs...};
+
+	size_t byte_count = 0;
+	unsigned int bit_count = 0;
+	uint8_t result = 0;
+	bool written = false;
+
+	for(size_t in = 0; in<(sizeof...(Cs)); in+=2)
+	{
+		written = false;
+
+		if(data[in] == '|')
+		{
+			written = true;
+			if(bit_count !=0)
+			{
+				buffer.data[byte_count++] = result;
+			}
+
+			bit_count = 0;
+			result = 0;
+			continue;
+		}
+
+		if(data[in] != ' ')
+		{
+			result |= 1<<bit_count;
+		}
+
+		++bit_count;
+
+		if(bit_count == 8)
+		{
+			buffer.data[byte_count++] = result;
+			bit_count = 0;
+			result = 0;
+			written = true;
+		}
+	}
+
+	if(not written)
+	{
+		buffer.data[byte_count] = result;
+	}
+
+	return buffer;
+}
+
+
+template<class ... GLYPHES>
+constexpr Data<byte_count<GLYPHES...>()> encode()
+{
+	return encode_<byte_count<GLYPHES...>()>(flatten_t<GLYPHES...>{});
+}
+
+// template<class ... GLYPHES>
+// void encode()
+// {
+// 	byte_count<GLYPHES...>();
+// }
+
+//------------------------------------------------------------------------------
 template<class ... GLYPHES>
 constexpr size_t max_glyphe_width()
 {
@@ -668,7 +697,7 @@ constexpr type::X start_offset(type::Width w, type::Y line)
 
 //------------------------------------------------------------------------------
 
-template<class ... GLYPHES>
+template<class Font, class ... GLYPHES>
 struct SimpleEncoding
 {
 	using LineBuffer_t =
@@ -686,7 +715,7 @@ struct SimpleEncoding
 		return false;
 	}
 
-protected:
+// protected:
 	static LineBuffer_t get_glype_line(GlyphInfo const& glyphe, type::Point const& pos)
 	{
 		auto const* data = glyph_data.data + glyphe.data_index;
@@ -707,6 +736,7 @@ protected:
 	{
 		return glyphe_mask<LineBuffer_t>(glyphe.width) << pos.get<type::X>();
 	}
+
 	static GlyphInfo const& get(int code_point)
 	{
 		for(size_t i=0; i<sizeof...(GLYPHES); ++i)
@@ -720,20 +750,126 @@ protected:
 	}
 
 	static constexpr GlyphInfo infos[sizeof...(GLYPHES)] =
-		{make_info<GlyphInfo, GLYPHES>(get_offset<GLYPHES, GLYPHES...>())...};
-	static const Data<byte_count<GLYPHES...>()> glyph_data =
-		encode<sizeof...(GLYPHES)>(flatten_t<GLYPHES...>{});
+		{make_info<Font, GlyphInfo, GLYPHES>(get_offset<GLYPHES, GLYPHES...>())...};
+	static constexpr Data<byte_count<GLYPHES...>()> glyph_data = encode<GLYPHES...>();
+		// encode<byte_count<GLYPHES...>()>(flatten_t<GLYPHES...>{});
 };
 
-template<class ... GLYPHES>
-constexpr GlyphInfo SimpleEncoding<GLYPHES...>::infos[];
 
-template<class ... GLYPHES>
-constexpr Data<byte_count<GLYPHES...>()> SimpleEncoding<GLYPHES...>::glyph_data;
+template<class Font, class ... GLYPHES>
+constexpr GlyphInfo SimpleEncoding<Font, GLYPHES...>::infos[];
+
+template<class Font, class ... GLYPHES>
+constexpr Data<byte_count<GLYPHES...>()> SimpleEncoding<Font, GLYPHES...>::glyph_data;
 
 //------------------------------------------------------------------------------
 
-using Tab_t = MakeFontTable<TestFont, SimpleEncoding, 0, '(', ')'>;
+// using Tab_t =
+// 	MakeFontTable<
+// 		TestFont,
+// 		SimpleEncoding, 0, '(', ')'>;
+
+using HelveticaMedium20_t =
+	MakeFontTable<
+		pixel_display::font::HelveticaMedium20,
+		SimpleEncoding,
+		0,
+		' ',
+		'!',
+		'"',
+		'#',
+		'$',
+		'%',
+		'&',
+		'\'',
+		'(',
+		')',
+		'*',
+		'+',
+		',',
+		'-',
+		'.',
+		'/',
+		'0',
+		'1',
+		'2',
+		'3',
+		'4',
+		'5',
+		'6',
+		'7',
+		'8',
+		'9',
+		':',
+		';',
+		'<',
+		'=',
+		'>',
+		'?',
+		'@',
+		'A',
+		'B',
+		'C',
+		'D',
+		'E',
+		'F',
+		'G',
+		'H',
+		'I',
+		'J',
+		'K',
+		'L',
+		'M',
+		'N',
+		'O',
+		'P',
+		'Q',
+		'R',
+		'S',
+		'T',
+		'U',
+		'V',
+		'W',
+		'X',
+		'Y',
+		'Z',
+		'[',
+		'\\',
+		']',
+		'^',
+		'_',
+		'`',
+		'a',
+		'b',
+		'c',
+		'd',
+		'e',
+		'f',
+		'g',
+		'h',
+		'i',
+		'j',
+		'k',
+		'l',
+		'm',
+		'n',
+		'o',
+		'p',
+		'q',
+		'r',
+		's',
+		't',
+		'u',
+		'v',
+		'w',
+		'x',
+		'y',
+		'z',
+		'{',
+		'}',
+		'~'>;
+
+
 
 } //namespace
 
@@ -741,50 +877,52 @@ using Tab_t = MakeFontTable<TestFont, SimpleEncoding, 0, '(', ')'>;
 
 TEST_CASE()
 {
-	REQUIRE(Tab_t::count() == 3);
-	REQUIRE(Tab_t::size() == 63);
+	// REQUIRE(HelveticaMedium20_t::count() == 0);
 
-	REQUIRE(Tab_t::has('('));
-	REQUIRE_FALSE(Tab_t::has('x'));
+	// REQUIRE(Tab_t::count() == 3);
+	// REQUIRE(Tab_t::size() == 63);
 
-	REQUIRE(
-		Tab_t::bounds('(') ==
-		(type::Outline{
-			type::Size{type::Width{4}, type::Height{18}},
-			type::Point{type::X{0}, type::Y{-4}}}));
+	// REQUIRE(Tab_t::has('('));
+	// REQUIRE_FALSE(Tab_t::has('x'));
 
-	REQUIRE(
-		encode<1>(TestFont::Glyphe<0>::bit_map{}) ==
-		Data<18>({85, 5, 64, 0, 1, 16, 64, 0, 4, 16, 0, 1, 4, 64, 0, 1, 80, 85}));
+	// REQUIRE(
+	// 	Tab_t::bounds('(') ==
+	// 	(type::Outline{
+	// 		type::Size{type::Width{4}, type::Height{18}},
+	// 		type::Point{type::X{0}, type::Y{-4}}}));
 
-	REQUIRE(
-		encode<1>(TestFont::Glyphe<40>::bit_map{}) ==
-		Data<9>({0xc8, 0x66, 0x33, 0x33, 0x33, 0x33, 0x33, 0x66, 0x8c}));
+	// REQUIRE(
+	// 	(encode<byte_count<TestFont::Glyphe<0>>(),1>(TestFont::Glyphe<0>::bit_map{})) ==
+	// 	Data<18>({85, 5, 64, 0, 1, 16, 64, 0, 4, 16, 0, 1, 4, 64, 0, 1, 80, 85}));
 
-	REQUIRE(
-		encode<1>(TestFont::Glyphe<41>::bit_map{}) ==
-		Data<9>({49, 102, 204, 204, 204, 204, 204, 102, 19}));
+	// REQUIRE(
+	// 	encode<1>(TestFont::Glyphe<40>::bit_map{}) ==
+	// 	Data<9>({0xc8, 0x66, 0x33, 0x33, 0x33, 0x33, 0x33, 0x66, 0x8c}));
 
-	REQUIRE(
-		(bitmap_cat<TestFont::Glyphe<0>::bit_map, TestFont::Glyphe<40>::bit_map>::type::byte_count)
-		== TestFont::Glyphe<40>::bit_map::byte_count + TestFont::Glyphe<0>::bit_map::byte_count + 1);
+	// REQUIRE(
+	// 	encode<1>(TestFont::Glyphe<41>::bit_map{}) ==
+	// 	Data<9>({49, 102, 204, 204, 204, 204, 204, 102, 19}));
 
-	REQUIRE(
-		encode<2>(bitmap_cat<TestFont::Glyphe<0>::bit_map, TestFont::Glyphe<40>::bit_map>::type{}) ==
-		Data<27>({
-			85, 5, 64, 0, 1, 16, 64, 0, 4, 16, 0, 1, 4, 64, 0, 1, 80, 85,
-			0xc8, 0x66, 0x33, 0x33, 0x33, 0x33, 0x33, 0x66, 0x8c}));
+	// REQUIRE(
+	// 	(bitmap_cat<TestFont::Glyphe<0>::bit_map, TestFont::Glyphe<40>::bit_map>::type::byte_count)
+	// 	== TestFont::Glyphe<40>::bit_map::byte_count + TestFont::Glyphe<0>::bit_map::byte_count + 1);
 
-	REQUIRE(
-		encode<2>(
-			flatten_t<
-				TestFont::Glyphe<0>,
-				TestFont::Glyphe<40>,
-				TestFont::Glyphe<41>>{}) ==
-		Data<36>({
-			85, 5, 64, 0, 1, 16, 64, 0, 4, 16, 0, 1, 4, 64, 0, 1, 80, 85,
-			0xc8, 0x66, 0x33, 0x33, 0x33, 0x33, 0x33, 0x66, 0x8c,
-			49, 102, 204, 204, 204, 204, 204, 102, 19}));
+	// REQUIRE(
+	// 	encode<2>(bitmap_cat<TestFont::Glyphe<0>::bit_map, TestFont::Glyphe<40>::bit_map>::type{}) ==
+	// 	Data<27>({
+	// 		85, 5, 64, 0, 1, 16, 64, 0, 4, 16, 0, 1, 4, 64, 0, 1, 80, 85,
+	// 		0xc8, 0x66, 0x33, 0x33, 0x33, 0x33, 0x33, 0x66, 0x8c}));
+
+	// REQUIRE(
+	// 	encode<2>(
+	// 		flatten_t<
+	// 			TestFont::Glyphe<0>,
+	// 			TestFont::Glyphe<40>,
+	// 			TestFont::Glyphe<41>>{}) ==
+	// 	Data<36>({
+	// 		85, 5, 64, 0, 1, 16, 64, 0, 4, 16, 0, 1, 4, 64, 0, 1, 80, 85,
+	// 		0xc8, 0x66, 0x33, 0x33, 0x33, 0x33, 0x33, 0x66, 0x8c,
+	// 		49, 102, 204, 204, 204, 204, 204, 102, 19}));
 
 
 	REQUIRE((Index<
@@ -1144,40 +1282,21 @@ struct TestOutput
 };
 
 
-TEST_CASE("calculate y positions")
-{
-		// 	auto const top_left_corner =
-		// 	pos +
-		// 	type::Point{type::X{info.dx}, type::Y{info.dy+info.height-1}};
-
-		// auto const byte_index =
-		// 	type::Point{
-		// 		top_left_corner.get<type::X>()/8,
-		// 		top_left_corner.get<type::Y>()};
-
-		// auto const byte_offset =
-		// 	type::Point{
-		// 		top_left_corner.get<type::X>()%8,
-		// 		top_left_corner.get<type::Y>()};
-
-		// auto const mask = Data_t::get_glyphe_mask(info, byte_offset);
-
-		// for(int i = 0; i < info.height; ++i)
-		// {
-		// 	output.set(
-		// 		/*Data_t::get_glype_line(info, byte_offset+type::Y{i}) &*/ mask,
-		// 		byte_index-type::Y{i});
-		// }
-
-}
-
-
 TEST_CASE("render glyphe")
 {
 	TestOutput out;
-	Tab_t::render_glyph(40, type::Point{type::X{40}, type::Y{26}}, out);
-	Tab_t::render_glyph(0, type::Point{type::X{30}, type::Y{0}}, out);
 
+	// REQUIRE(HelveticaMedium20_t::get(0).data_index == 0);
+	// REQUIRE(HelveticaMedium20_t::count() == 95);
+	// REQUIRE(HelveticaMedium20_t::data_size() == 1238);
+
+	// Tab_t::render_glyph(40, type::Point{type::X{40}, type::Y{26}}, out);
+	// Tab_t::render_glyph(0, type::Point{type::X{30}, type::Y{0}}, out);
+
+	type::X x = HelveticaMedium20_t::render_glyph('A', type::Point{type::X{0}, type::Y{2}}, out);
+	HelveticaMedium20_t::render_glyph('Z', type::Point{type::X{25}, type::Y{2}}, out);
+	HelveticaMedium20_t::render_glyph('a', type::Point{type::X{0}, type::Y{20}}, out);
+	HelveticaMedium20_t::render_glyph('z', type::Point{type::X{25}, type::Y{20}}, out);
 	// Tab_t::render_glyph(40, type::Point{type::X{5}, type::Y{1}}, out);
 
 	// Tab_t::render_glyph(40, type::Point{type::X{10}, type::Y{2}}, out);

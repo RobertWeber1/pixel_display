@@ -1,5 +1,5 @@
 #pragma once
-#include <pixel_display/type/coordinates.h>
+// #include <pixel_display/type/coordinates.h>
 
 namespace pixel_display
 {
