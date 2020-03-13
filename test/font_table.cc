@@ -2,6 +2,7 @@
 #include <pixel_display/font_table.h>
 #include <pixel_display/type/encoding.h>
 #include <pixel_display/type/dimensions.h>
+#include <pixel_display/fonts/helvR10.h>
 #include <pixel_display/fonts/helvR14.h>
 #include <pixel_display/type/bit_map.h>
 
@@ -151,22 +152,22 @@ struct TestFontTable : EncodingStrategy<Font, GLYPHES...>
 {
 	using Data_t = EncodingStrategy<Font, GLYPHES...>;
 
-	static size_t data_size()
+	static constexpr size_t data_size()
 	{
 		return sizeof(Data_t::glyph_data);
 	}
 
-	static size_t count()
+	static constexpr size_t count()
 	{
 		return sizeof...(GLYPHES);
 	}
 
-	static size_t size()
+	static constexpr size_t size()
 	{
 		return sizeof(Data_t::infos) + sizeof(Data_t::glyph_data);
 	}
 
-	static type::Outline bounds(int code_point)
+	static constexpr type::Outline bounds(int code_point)
 	{
 		auto const& glyph_info = Data_t::get(code_point);
 		return type::Outline(
@@ -178,8 +179,31 @@ struct TestFontTable : EncodingStrategy<Font, GLYPHES...>
 				type::Y{glyph_info.dy}});
 	}
 
+	static constexpr type::Width glyph_width(int code_point)
+	{
+		return type::Width{Data_t::get(code_point).skip_width};
+	}
+
+	static constexpr type::Height glyph_height(int code_point)
+	{
+		return type::Height{Data_t::get(code_point).height};
+	}
+
+	static constexpr type::Height glyph_descent(int code_point)
+	{
+		return type::Height{Data_t::get(code_point).dy};
+	}
+
+	static constexpr type::Height glyph_ascent(int code_point)
+	{
+		return type::Height{
+			static_cast<int16_t>(
+				Data_t::get(code_point).height+
+				Data_t::get(code_point).dy)};
+	}
+
 	template<class Output>
-	static type::Point render_glyph(
+	static constexpr type::Point render_glyph(
 		int code_point,
 		type::Point const& pos,
 		Output & output)
@@ -214,7 +238,7 @@ struct TestFontTable : EncodingStrategy<Font, GLYPHES...>
 	}
 
 	template<class Output>
-	static type::Point render_bit_mask(
+	static constexpr type::Point render_bit_mask(
 		int code_point,
 		type::Point const& pos,
 		Output &)
@@ -703,7 +727,7 @@ struct SimpleEncoding
 	using LineBuffer_t =
 		std::array<uint8_t, 1 + calc_buf_size(max_glyphe_width<GLYPHES...>())>;
 
-	static bool has(int code_point)
+	static constexpr bool has(int code_point)
 	{
 		for(size_t i=0; i<sizeof...(GLYPHES); ++i)
 		{
@@ -716,7 +740,7 @@ struct SimpleEncoding
 	}
 
 // protected:
-	static LineBuffer_t get_glype_line(GlyphInfo const& glyphe, type::Point const& pos)
+	static constexpr LineBuffer_t get_glype_line(GlyphInfo const& glyphe, type::Point const& pos)
 	{
 		auto const* data = glyph_data.data + glyphe.data_index;
 		auto const width = type::Width{glyphe.width};
@@ -732,12 +756,12 @@ struct SimpleEncoding
 		return shift(buf, x - start_offset(width, y));
 	}
 
-	static LineBuffer_t get_glyphe_mask(GlyphInfo const& glyphe, type::Point const& pos)
+	static constexpr LineBuffer_t get_glyphe_mask(GlyphInfo const& glyphe, type::Point const& pos)
 	{
 		return glyphe_mask<LineBuffer_t>(glyphe.width) << pos.get<type::X>();
 	}
 
-	static GlyphInfo const& get(int code_point)
+	static constexpr GlyphInfo const& get(int code_point)
 	{
 		for(size_t i=0; i<sizeof...(GLYPHES); ++i)
 		{
@@ -769,9 +793,9 @@ constexpr Data<byte_count<GLYPHES...>()> SimpleEncoding<Font, GLYPHES...>::glyph
 // 		TestFont,
 // 		SimpleEncoding, 0, '(', ')'>;
 
-using HelveticaMedium20_t =
+using HelveticaMedium14_t =
 	MakeFontTable<
-		pixel_display::font::HelveticaMedium20,
+		pixel_display::font::HelveticaMedium14,
 		SimpleEncoding,
 		0,
 		' ',
@@ -866,8 +890,10 @@ using HelveticaMedium20_t =
 		'y',
 		'z',
 		'{',
+		'|',
 		'}',
-		'~'>;
+		'~',
+		246>;
 
 
 
@@ -1282,6 +1308,8 @@ struct TestOutput
 };
 
 
+
+
 TEST_CASE("render glyphe")
 {
 	TestOutput out;
@@ -1293,10 +1321,10 @@ TEST_CASE("render glyphe")
 	// Tab_t::render_glyph(40, type::Point{type::X{40}, type::Y{26}}, out);
 	// Tab_t::render_glyph(0, type::Point{type::X{30}, type::Y{0}}, out);
 
-	type::X x = HelveticaMedium20_t::render_glyph('A', type::Point{type::X{0}, type::Y{2}}, out);
-	HelveticaMedium20_t::render_glyph('Z', type::Point{type::X{25}, type::Y{2}}, out);
-	HelveticaMedium20_t::render_glyph('a', type::Point{type::X{0}, type::Y{20}}, out);
-	HelveticaMedium20_t::render_glyph('z', type::Point{type::X{25}, type::Y{20}}, out);
+	type::X x = HelveticaMedium14_t::render_glyph('A', type::Point{type::X{0}, type::Y{2}}, out);
+	x = HelveticaMedium14_t::render_glyph('Z', type::Point{x, type::Y{2}}, out);
+	x = HelveticaMedium14_t::render_glyph(0xf6, type::Point{x, type::Y{2}}, out);
+	x = HelveticaMedium14_t::render_glyph('a', type::Point{x, type::Y{2}}, out);
 	// Tab_t::render_glyph(40, type::Point{type::X{5}, type::Y{1}}, out);
 
 	// Tab_t::render_glyph(40, type::Point{type::X{10}, type::Y{2}}, out);
@@ -1348,3 +1376,297 @@ TEST_CASE("render glyphe")
 // 		Tab_t::get_glype_line(Tab_t::get(41),type::Point(type::X{5}, type::Y{5}))
 // 		== "000000011000000000000000"_buf);
 // }
+//
+//
+
+
+template<size_t Width, size_t Height>
+struct StaticOutput
+{
+	using line_buf = std::array<uint8_t, Width/8 + ((Width%8 != 0) ? 1 : 0)>;
+	line_buf buf[Height] = {0};
+
+	template<size_t N>
+	void set(std::array<uint8_t, N> const& data, uint16_t byte_index, uint16_t line)
+	{
+		if(byte_index>=buf[0].size() or line >= Height)
+		{
+			return;
+		}
+
+		for(uint16_t i = 0; i < N; ++i)
+		{
+			if(byte_index+i >= buf[0].size())
+				return;
+
+			buf[line][byte_index+i] |= data[i];
+		}
+	}
+
+	template<size_t N>
+	void set(std::array<uint8_t, N> const& data, type::Point const& p)
+	{
+		set(data, p.get<type::X>().value, p.get<type::Y>().value);
+	}
+
+	void print_()
+	{
+		for(int i=Height-1; i>=0; --i)
+		{
+			std::cout << buf[i] << std::endl;
+		}
+	}
+
+	void print_c()
+	{
+		for(int i=Height-1; i>=0; --i)
+		{
+			std::cout << "static constexpr std::array<uint8_t>" << buf[i] << std::endl;
+		}
+	}
+};
+
+template<class FontTable, size_t N>
+constexpr size_t width(char const (&data)[N])
+{
+	size_t result = 0;
+
+	for(size_t  i = 0; i<N-1; ++i)
+	{
+		result += FontTable::glyph_width(data[i]).value;
+	}
+
+	return result;
+}
+
+template<class FontTable, size_t N>
+constexpr size_t height(char const (&data)[N])
+{
+	size_t result = 0;
+
+	for(size_t  i = 0; i<N-1; ++i)
+	{
+		result = std::max<size_t>(FontTable::glyph_height(data[i]).value, result);
+	}
+
+	return result;
+}
+
+template<class FontTable, size_t N>
+constexpr int descent(char const (&data)[N])
+{
+	int result = 0;
+
+	for(size_t  i = 0; i<N-1; ++i)
+	{
+		result = std::min<int>(FontTable::glyph_descent(data[i]).value, result);
+	}
+
+	return result;
+}
+
+template<class FontTable, size_t N>
+constexpr int ascent(char const (&data)[N])
+{
+	int result = 0;
+
+	for(size_t  i = 0; i<N-1; ++i)
+	{
+		result = std::max<int>(FontTable::glyph_ascent(data[i]).value, result);
+	}
+
+	return result;
+}
+
+using value_type = int;
+
+
+template <typename Iterator>
+size_t get_length (Iterator p)
+{
+    unsigned char c = static_cast<unsigned char> (*p);
+    if (c < 0x80) return 1;
+    else if (!(c & 0x20)) return 2;
+    else if (!(c & 0x10)) return 3;
+    else if (!(c & 0x08)) return 4;
+    else if (!(c & 0x04)) return 5;
+    else return 6;
+}
+
+template <typename Iterator>
+value_type get_value (Iterator p)
+{
+    size_t len = get_length (p);
+
+    if (len == 1)
+
+    return *p++;
+
+    value_type res = static_cast<unsigned char> (
+                                    *p & (0xff >> (len + 1)))
+                                     << ((len - 1) * 6);
+
+    for (--len; len; --len)
+        res |= (static_cast<unsigned char> (*(++p)) - 0x80) << ((len - 1) * 6);
+
+    return res;
+}
+
+struct CharIter
+{
+	char const* p_;
+
+	CharIter& operator++()
+	{
+		++p_;
+		return *this;
+	}
+
+	char operator*()
+	{
+		return *p_;
+	}
+
+	bool operator==(const char* other)
+	{
+		return p_ == other;
+	}
+
+	bool operator!=(const char* other)
+	{
+		return p_ != other;
+	}
+};
+
+template<class FontTable, size_t Width, size_t Height, size_t N>
+constexpr StaticOutput<Width, Height> make_static_out(char const (&data)[N], type::Y y)
+{
+	StaticOutput<Width, Height> out;
+	type::X x{0};
+	for(size_t  i = 0; i<N-1; ++i)
+	{
+		x = FontTable::render_glyph(data[i], type::Point{x, y}, out);
+	}
+
+	// std::string foo(data, N);
+	// char const* p = data;
+	// while(p < (data+N))
+	// {
+	// 	x = FontTable::render_glyph(get_value<char const*&>(p), type::Point{x, y}, out);
+	// }
+
+	return out;
+}
+
+constexpr char credits[] = "Babett | Cornelius | Daniela | Dorothea | Erik | Holger | Jens H | Joerg | Karli | Karsten M | Katharina | Kathrin | Katrin | Klaus B | Lissy | Martin B | Martin H | Petra | Ralf D | Ralf N | Ralf S | Rico B | Rico T | Robert P | Robert W | Stefan M | Steffen K | Thomas K | Udo G | ";
+
+auto constexpr w = width<HelveticaMedium14_t>(credits);
+auto constexpr h = height<HelveticaMedium14_t>(credits);
+auto constexpr desc = descent<HelveticaMedium14_t>(credits);
+auto constexpr asc = ascent<HelveticaMedium14_t>(credits);
+
+enum class StratCorner
+{
+	TopLeft,
+	BottomLeft,
+	TopRight,
+	BottomRight
+};
+
+using Collumn  = std::array<uint16_t, 14>;
+using Collumns = std::array<Collumn, 20>;
+
+Collumns make_pixel_table(StratCorner start)
+{
+	uint16_t index = 0;
+	bool first = true;
+	Collumns ret;
+	switch(start)
+	{
+	case StratCorner::BottomLeft:
+		first = false;
+
+	[[Fallthrough]]
+	case StratCorner::TopLeft:
+		for(int i=0; i<20; ++i)
+		{
+			if(first)
+			{
+				first = false;
+				for(int j=0; j<14; ++j)
+				{
+					ret[i][j] = index++;
+				}
+			}
+			else
+			{
+				first = true;
+				for(int j=13; j>=0; --j)
+				{
+					ret[i][j] = index++;
+				}
+			}
+		}
+	break;
+
+
+	case StratCorner::BottomRight:
+		first = false;
+	case StratCorner::TopRight:
+		for(int i=19; i>=0; --i)
+		{
+			if(first)
+			{
+				first = false;
+				for(int j=0; j<14; ++j)
+				{
+					ret[i][j] = index++;
+				}
+			}
+			else
+			{
+				first = true;
+				for(int j=13; j>=0; --j)
+				{
+					ret[i][j] = index++;
+				}
+			}
+		}
+	break;
+
+	}
+
+	return ret;
+}
+
+
+template<StratCorner Start>
+struct PixelTable
+{
+	uint16_t get(int x, int y)
+	{
+		return colls_[x][y];
+	}
+private:
+	Collumns colls_ = make_pixel_table(Start);
+};
+
+
+TEST_CASE("StratCorner::TopLeft")
+{
+	PixelTable<StratCorner::TopLeft> pt;
+
+	REQUIRE(pt.get(0,0) == 0);
+	REQUIRE(pt.get(0,13) == 13);
+	REQUIRE(pt.get(1,13) == 14);
+	REQUIRE(pt.get(1,0) == 27);
+
+	REQUIRE(pt.get(19,13) == 266);
+	REQUIRE(pt.get(19,0) == 279);
+	// REQUIRE(w == 1852);
+	// REQUIRE(h == 11);
+	// REQUIRE(desc == -3);
+	// REQUIRE(asc == 11);
+
+	// make_static_out<HelveticaMedium14_t, w, 16>(credits, type::Y{5}).print_();
+}

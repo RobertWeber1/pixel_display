@@ -27,4 +27,5 @@ target_compile_options( test-pixel_display
 	PRIVATE -Wall
 	PRIVATE -Wextra
 	PRIVATE -Wpedantic
+	PRIVATE -std=c++14
 )
