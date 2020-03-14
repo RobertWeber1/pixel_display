@@ -15,7 +15,7 @@ struct BitMap
 
 } //namespace type
 
-namespace literals
+inline namespace literals
 {
 
 template <class T, T ... Cs>
