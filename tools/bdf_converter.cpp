@@ -12,6 +12,38 @@ bool starts_with(std::string const& line, const char* pattern)
 	return line.find(pattern) == 0;
 }
 
+template<size_t N, class Func>
+struct Action_
+{
+	char const(&pattern)[N];
+	Func const& func;
+
+	Action_(char const(&pattern)[N], Func const& fun)
+	: pattern(pattern)
+	, func(fun)
+	{}
+
+	void operator()(std::string const& line) const
+	{
+		if(line.find(pattern) == 0)
+		{
+			func(line.c_str()+(N-1), line.size()-(N-1));
+		}
+	}
+};
+
+template<size_t N, class Func>
+struct Action_<N, Func> action(char const(&pattern)[N], Func const& fun)
+{
+	return Action_<N, Func>(pattern, fun);
+}
+
+template<class ... Actions>
+bool process(std::string const& line, Actions const& ... actions)
+{
+	(void)std::initializer_list<int>{0, (actions(line),0)...};
+}
+
 std::string bits(char c, int bit_count)
 {
 	std::stringstream output;
@@ -25,21 +57,56 @@ std::string bits(char c, int bit_count)
 	return output.str();
 }
 
-
-std::string hline(unsigned int width)
+std::string remove_quotes(char const*s, size_t l)
 {
-	std::stringstream result;
-	result << "\"*";
-	for(unsigned int i=0; i<width; ++i)
-	{
-		result << "--";
-	}
-	result << "*\"";
+	char const* start = s;
+	char const* end = s;
 
-	return result.str();
+	while(*s != '"' and s<start+l)
+	{
+		++s;
+	}
+	start = ++s;
+
+	while(*s != '"' and s<start+l)
+	{
+		++s;
+	}
+	end = s;
+
+	return std::string(start, end);
+}
+
+bool is_non_white_space(char c)
+{
+	return (c > 0x20) and (c < 0x7f);
+}
+
+std::string strip(char const*s, size_t l)
+{
+	char const* start = s;
+	char const* end = s;
+
+	while(*s == ' ' and s<start+l)
+	{
+		++s;
+	}
+	start = s;
+
+	while(is_non_white_space(*s) and s<start+l)
+	{
+		++s;
+	}
+	end = s;
+
+	return std::string(start, end);
 }
 
 const char nl = '\n';
+const char start_comment_block[] =
+	"\\***********************************************************************\n";
+const char end_comment_block[] =
+	"***********************************************************************\\\n";
 
 class BdfConverter
 {
@@ -49,9 +116,13 @@ private:
 	std::istream & input;
 	std::ostream & output;
 
+	std::stringstream comments_;
 	std::string family_name;
+	std::string font_id;
+	std::string copy_right_notice;
 	std::string weight;
 	std::string pixel_size;
+	std::string font_name;
 
 	struct BitmapParser
 	{
@@ -175,10 +246,6 @@ private:
 		{
 			if(is_unique(name))
 			{
-				//parsed_glyphes.insert(name);
-				// output
-				// 	<< "template<>\nstruct " << font_name << "::Glyphe<" << ">" << nl
-				// 	<< "{\n";
 				char buffer[200] = {0};
 				do
 				{
@@ -188,17 +255,6 @@ private:
 				output
 					<< "};\n"
 					<< nl;
-
-				// if(is_unique_encoding)
-				// {
-				// 	output
-				// 		<< "template<>\n"
-				// 		<< "struct lockup<" << name << "::encoding>\n"
-				// 		<< "{\n"
-				// 		<< "\tusing glyph = " << name << ";\n"
-				// 		<< "};\n"
-				// 		<< nl;
-				// }
 			}
 			else
 			{
@@ -224,11 +280,6 @@ private:
 				output
 					<< "template<>\nstruct " << font_name << "::Glyphe<" << encoding<< ">" << nl
 					<< "{\n";
-
-				// output
-				// 	<< "\tusing encoding = type::Encoding<"
-				// 	<< encoding
-				// 	<< ">;\n";
 			}
 			else if(starts_with(line, "DWIDTH"))
 			{
@@ -279,74 +330,116 @@ private:
 
 	void info_(std::string const& line)
 	{
-		if(starts_with(line, "STARTPROPERTIES"))
-		{
-			current_state = &BdfConverter::properties_;
-		}
+		process(
+			line,
+			action(
+				"FONT ",
+				[this](char const* s, size_t l)
+				{
+					font_id = strip(s, l);
+				}),
+			action(
+				"COMMENT",
+				[this](char const* s, size_t l)
+				{
+					comments_ << std::string(s, l) << '\n';
+				}),
+			action(
+				"STARTPROPERTIES",
+				[this](char const*, size_t)
+				{
+					current_state = &BdfConverter::properties_;
+				}));
 	}
-
-	std::string font_name;
 
 	void properties_(std::string const& line)
 	{
-		if(starts_with(line, "FAMILY_NAME"))
-		{
-			family_name = std::string(line.c_str()+13, line.size()-14);
-		}
-		else if(starts_with(line, "WEIGHT_NAME"))
-		{
-			weight = std::string(line.c_str()+13, line.size()-14);
-		}
-		else if(starts_with(line, "PIXEL_SIZE"))
-		{
-			pixel_size = std::string(line.c_str()+11, line.size()-11);
-		}
-		else if(starts_with(line, "ENDPROPERTIES"))
-		{
-			std::stringstream tmp;
-			tmp << family_name << weight << pixel_size;
-			font_name = tmp.str();
+		process(
+			line,
+			action(
+				"FAMILY_NAME",
+				[this](char const* s, size_t l)
+				{
+					family_name = remove_quotes(s, l);
+				}),
+			action(
+				"WEIGHT_NAME",
+				[this](char const* s, size_t l)
+				{
+					weight = remove_quotes(s, l);
+				}),
+			action(
+				"PIXEL_SIZE",
+				[this](char const* s, size_t l)
+				{
+					pixel_size = strip(s, l);
+				}),
+			action(
+				"COPYRIGHT",
+				[this](char const* s, size_t l)
+				{
+					copy_right_notice = remove_quotes(s, l);
+				}),
+			action(
+				"ENDPROPERTIES",
+				[this](char const* s, size_t l)
+				{
+					std::stringstream tmp;
+					tmp << family_name << weight << pixel_size;
+					font_name = tmp.str();
 
-			output
-				<< "namespace pixel_display\n"
-				<< "{\n\n"
-				<< "namespace font\n"
-				<< "{\n\n"
-				<< "template<int8_t I>\n"
-				<< "using Constant = type::Constant<int8_t, I>;\n"
-				<< "using namespace pixel_display::literals;\n"
-				<< nl
-				<< "struct " << family_name << weight << pixel_size << nl
-				<< "{\n"
-				<< nl
-				<< "template<int I>\n"
-				<< "struct Glyphe;\n\n"
-				<< "};\n\n"
-				<< "template<int I>\n"
-				<< "static constexpr int get_encoding(Glyphe<I>)\n"
-				<< "{\n"
-				<< "	return I;\n"
-				<< "}\n"
-				<< nl;
+					output
+						<< start_comment_block
+						<< nl
+						<< "Fontname: " << font_id << nl
+						<< "Copyright: " << copy_right_notice << nl
+						<< nl
+						<< comments_.str()
+						<< end_comment_block
+						<< nl
+						<< "#pragma once\n"
+						<< "#include <pixel_display/type/encoding.h>\n"
+						<< "#include <pixel_display/type/bit_map.h>\n"
+						<< nl
+						<< "namespace pixel_display\n"
+						<< "{\n\n"
+						<< "namespace font\n"
+						<< "{\n\n"
+						<< "template<int8_t I>\n"
+						<< "using Constant = type::Constant<int8_t, I>;\n"
+						<< "using namespace pixel_display::literals;\n"
+						<< nl
+						<< "struct " << family_name << weight << pixel_size << nl
+						<< "{\n"
+						<< nl
+						<< "template<int I>\n"
+						<< "struct Glyphe;\n\n"
+						<< "};\n\n"
+						<< "template<int I>\n"
+						<< "static constexpr int get_encoding(Glyphe<I>)\n"
+						<< "{\n"
+						<< "	return I;\n"
+						<< "}\n"
+						<< nl;
 
-			current_state = &BdfConverter::chars_;
-		}
-
+					current_state = &BdfConverter::chars_;
+				}));
 	}
 
 	void chars_(std::string const& line)
 	{
-		if(starts_with(line, "STARTCHAR"))
-		{
-			CharParser char_parser(std::string(&line[10], line.size()-10),  font_name, input, output);
-			char_parser.run();
-		}
-		else if(starts_with(line, "ENDFONT"))
-		{
-
-		}
-		else if(starts_with(line, "CHARS"))
-		{}
+		process(
+			line,
+			action(
+				"STARTCHAR",
+				[this](char const* s, size_t l)
+				{
+					CharParser(
+						std::string(s, l),
+						font_name,
+						input,
+						output).run();
+				}));
 	}
 
 public:
@@ -358,12 +451,6 @@ public:
 
 	void run()
 	{
-		output
-			<< "#pragma once\n"
-			<< "#include <pixel_display/type/encoding.h>\n"
-			<< "#include <pixel_display/type/bit_map.h>\n"
-			<< nl;
-
 		char buffer[200] = {0};
 		while(not input.eof())
 		{
