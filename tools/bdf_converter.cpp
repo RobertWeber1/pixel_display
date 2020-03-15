@@ -104,9 +104,93 @@ std::string strip(char const*s, size_t l)
 
 const char nl = '\n';
 const char start_comment_block[] =
-	"\\***********************************************************************\n";
+	"\\**************************************"
+	"*****************************************\n";
 const char end_comment_block[] =
-	"***********************************************************************\\\n";
+	"****************************************"
+	"****************************************\\\n";
+
+std::string make_ws(size_t count)
+{
+	std::string ret;
+
+	for(size_t i=0; i<count; ++i)
+	{
+		ret += ' ';
+	}
+
+	return ret;
+}
+
+const char* find_left_ws(const char* pos, const char* start)
+{
+	const char* curr_pos = pos;
+
+	while(*curr_pos != ' ' and curr_pos >= start)
+	{
+		--curr_pos;
+	}
+
+	if(curr_pos != start)
+	{
+		return curr_pos;
+	}
+
+	return pos;
+}
+
+const char* find_right_ws(const char* pos, const char* end)
+{
+	const char* curr_pos = pos;
+
+	while(*curr_pos != ' ' and curr_pos <= end)
+	{
+		++curr_pos;
+	}
+
+	if(curr_pos != end)
+	{
+		return curr_pos;
+	}
+
+	return pos;
+}
+
+void print_copyright_notice(
+	std::ostream& output,
+	std::string const& tag,
+	std::string const& copy_right_notice)
+{
+	output << tag;
+
+	if(tag.size() + copy_right_notice.size() > 80)
+	{
+		size_t tag_width = tag.size();
+		size_t rest_width = 80 - tag_width;
+
+		const char* start = copy_right_notice.c_str();
+		const char* end = copy_right_notice.c_str() + copy_right_notice.size();
+		const char* pos = start + rest_width;
+		do
+		{
+			pos = find_left_ws(pos, start);
+
+			output << std::string(start, pos) << nl;
+			start = pos;
+			pos += rest_width;
+
+			if(pos<end)
+			{
+				output << make_ws(tag_width-1);
+			}
+
+		}while(pos < end);
+	}
+	else
+	{
+		output << copy_right_notice << nl;
+	}
+}
 
 class BdfConverter
 {
@@ -128,21 +212,29 @@ private:
 	{
 		unsigned int width;
 		unsigned int height;
+		int dx;
+		int dy;
 		std::istream & input;
 		std::ostream & output;
 
 		BitmapParser(
 			unsigned int width_,
 			unsigned int height_,
+			int dx_,
+			int dy_,
 			std::istream & input_,
 			std::ostream & output_)
 		: width(width_)
 		, height(height_)
+		, dx(dx_)
+		, dy(dy_)
 		, input(input_)
 		, output(output_)
 		{}
 
-		bool process_line(std::string const& line, std::vector<std::string> & lines)
+		bool process_line(
+			std::string const& line,
+			std::vector<std::string> & lines)
 		{
 			if(starts_with(line, "ENDCHAR"))
 			{
@@ -183,16 +275,24 @@ private:
 
 		void run()
 		{
-			output
-				<< "\tusing bit_map = decltype(\n";
+			std::stringstream tmp_out;
+
+			tmp_out << "\tusing bit_map = decltype(\n";
 			const auto lines = get_bitmap_lines();
 
 			for(unsigned int i=0; i<lines.size(); ++i)
 			{
-				output
+				tmp_out
 					<< "\t\t\"" << lines[i] << "\""
 					<< ((i<lines.size()-1) ? "\n" : "_make_bitmap);\n");
 			}
+
+			output
+					<< "\tusing width = Constant<" << width << ">;\n"
+					<< "\tusing height = Constant<" << height << ">;\n"
+					<< "\tusing x = Constant<" << (0 + dx) << ">;\n"
+					<< "\tusing y = Constant<" << (0 + dy) << ">;\n"
+					<< tmp_out.str();
 		}
 	};
 
@@ -278,7 +378,8 @@ private:
 				}
 
 				output
-					<< "template<>\nstruct " << font_name << "::Glyphe<" << encoding<< ">" << nl
+					<< "template<>\nstruct "
+					<< font_name << "::Glyphe<" << encoding<< ">\n"
 					<< "{\n";
 			}
 			else if(starts_with(line, "DWIDTH"))
@@ -297,17 +398,17 @@ private:
 				height   = strtol(end, &end, 10);
 				x_offset = strtol(end, &end, 10);
 				y_offset = strtol(end, &end, 10);
-
-				output
-					<< "\tusing width = Constant<" << width << ">;\n"
-					<< "\tusing height = Constant<" << height << ">;\n"
-					<< "\tusing x = Constant<" << x_offset << ">;\n"
-					<< "\tusing y = Constant<" << y_offset << ">;\n";
 			}
 			else if(starts_with(line, "BITMAP"))
 			{
-				BitmapParser bitmap_parser(width, height, input, output);
-				bitmap_parser.run();
+				BitmapParser(
+					width,
+					height,
+					x_offset,
+					y_offset,
+					input,
+					output).run();
+
 				return false;
 			}
 			return true;
@@ -351,7 +452,6 @@ private:
 					current_state = &BdfConverter::properties_;
 				}));
 	}
-
 	void properties_(std::string const& line)
 	{
 		process(
@@ -391,8 +491,14 @@ private:
 					output
 						<< start_comment_block
 						<< nl
-						<< "Fontname: " << font_id << nl
-						<< "Copyright: " << copy_right_notice << nl
+						<< "Fontname: " << font_id << nl;
+
+					print_copyright_notice(
+						output,
+						"Copyright: ",
+						copy_right_notice);
+
+					output
 						<< nl
 						<< comments_.str()
 						<< end_comment_block
