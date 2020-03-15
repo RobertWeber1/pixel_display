@@ -172,7 +172,7 @@ private:
 		std::vector<std::string> get_bitmap_lines()
 		{
 			std::vector<std::string> lines;
-			char buffer[200] = {0};
+			char buffer[1000] = {0};
 			do
 			{
 				input.getline(buffer, sizeof(buffer));
@@ -246,7 +246,7 @@ private:
 		{
 			if(is_unique(name))
 			{
-				char buffer[200] = {0};
+				char buffer[1000] = {0};
 				do
 				{
 					input.getline(buffer, sizeof(buffer));
@@ -258,7 +258,7 @@ private:
 			}
 			else
 			{
-				char buffer[200] = {0};
+				char buffer[1000] = {0};
 				do
 				{
 					input.getline(buffer, sizeof(buffer));
@@ -451,7 +451,7 @@ public:
 
 	void run()
 	{
-		char buffer[200] = {0};
+		char buffer[1000] = {0};
 		while(not input.eof())
 		{
 			input.getline(buffer, sizeof(buffer));
