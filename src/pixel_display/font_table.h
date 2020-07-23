@@ -4,8 +4,18 @@
 namespace pixel_display
 {
 
+using type::X;
+using type::Y;
+using type::Width;
+using type::Height;
+using type::Point;
+using type::Size;
+using type::Outline;
 
-template<class Font, template<class ...>class EncodingStrategy, class ... GLYPHES>
+template<
+	class Font,
+	template<class ...>class EncodingStrategy,
+	class ... GLYPHES>
 struct FontTable : EncodingStrategy<Font, GLYPHES...>
 {
 	using Data_t = EncodingStrategy<Font, GLYPHES...>;
@@ -25,62 +35,64 @@ struct FontTable : EncodingStrategy<Font, GLYPHES...>
 		return sizeof(Data_t::infos) + sizeof(Data_t::glyph_data);
 	}
 
-	static constexpr type::Outline bounds(int code_point)
+	static constexpr Outline bounds(int code_point)
 	{
 		auto const& glyph_info = Data_t::get(code_point);
-		return type::Outline(
-			type::Size{
-				type::Width{glyph_info.width},
-				type::Height{glyph_info.height}},
-			type::Point{
-				type::X{glyph_info.dx},
-				type::Y{glyph_info.dy}});
+		return Outline(
+			Size{
+				Width{glyph_info.width},
+				Height{glyph_info.height}},
+			Point{
+				X{glyph_info.dx},
+				Y{glyph_info.dy}});
 	}
 
-	static constexpr type::Width glyph_width(int code_point)
+	static constexpr Width glyph_width(int code_point)
 	{
-		return type::Width{Data_t::get(code_point).skip_width};
+		return Width{Data_t::get(code_point).skip_width};
 	}
 
-	static constexpr type::Height glyph_height(int code_point)
+	static constexpr Height glyph_height(int code_point)
 	{
-		return type::Height{Data_t::get(code_point).height};
+		return Height{Data_t::get(code_point).height};
 	}
 
-	static constexpr type::Height glyph_descent(int code_point)
+	static constexpr Height glyph_descent(int code_point)
 	{
-		return type::Height{Data_t::get(code_point).dy};
+		return Height{Data_t::get(code_point).dy};
 	}
 
-	static constexpr type::Height glyph_ascent(int code_point)
+	static constexpr Height glyph_ascent(int code_point)
 	{
-		return type::Height{
+		return Height{
 			static_cast<int16_t>(
 				Data_t::get(code_point).height+
 				Data_t::get(code_point).dy)};
 	}
 
 	template<class Output>
-	static constexpr type::Point render_glyph(
+	static constexpr Point render_glyph(
 		int code_point,
-		type::Point const& pos,
+		Point const& pos,
 		Output & output)
 	{
 		auto const& info = Data_t::get(code_point);
 
 		auto const top_left_corner =
 			pos +
-			type::Point{type::X{info.dx}, type::Y{static_cast<int16_t>(info.height+info.dy-1)}};
+			Point{
+				X{info.dx},
+				Y{static_cast<int16_t>(info.height+info.dy-1)}};
 
 		auto const byte_index =
-			type::Point{
-				top_left_corner.get<type::X>()/8,
-				top_left_corner.get<type::Y>()};
+			Point{
+				top_left_corner.get<X>()/8,
+				top_left_corner.get<Y>()};
 
 		auto const byte_offset =
-			type::Point{
-				top_left_corner.get<type::X>()%8,
-				top_left_corner.get<type::Y>()};
+			Point{
+				top_left_corner.get<X>()%8,
+				top_left_corner.get<Y>()};
 
 		auto const mask = Data_t::get_glyphe_mask(info, byte_offset);
 
@@ -89,25 +101,28 @@ struct FontTable : EncodingStrategy<Font, GLYPHES...>
 		for(int16_t i = 0; i < info.height; ++i)
 		{
 			output.set(
-				Data_t::get_glype_line(info, type::Point{top_left_corner.get<type::X>()%8,type::Y{i}}) &
+				Data_t::get_glype_line(
+					info,
+					Point{top_left_corner.get<X>()%8, Y{i}}) &
 				mask,
-				byte_index-type::Y{i});
+				byte_index-Y{i});
 		}
 
-		return pos + type::X{info.skip_width};
+		return pos + X{info.skip_width};
 	}
 
-	template<class Output>
-	static constexpr type::Point render_bit_mask(
-		int code_point,
-		type::Point const& pos,
-		Output &)
-	{
-		auto const& glyph_info = Data_t::get(code_point);
+	// template<class Output>
+	// static constexpr Point render_bit_mask(
+	// 	int code_point,
+	// 	Point const& pos,
+	// 	Output &)
+	// {
+	// 	auto const& glyph_info = Data_t::get(code_point);
 
-		return pos + type::X{glyph_info.next};
-	}
+	// 	return pos + X{glyph_info.next};
+	// }
 };
+
 
 template<class F, template<class ...>class Strategy, int ... CodePoints>
 using MakeFontTable =

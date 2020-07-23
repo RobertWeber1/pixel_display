@@ -39,7 +39,7 @@ struct Action_<N, Func> action(char const(&pattern)[N], Func const& fun)
 }
 
 template<class ... Actions>
-bool process(std::string const& line, Actions const& ... actions)
+void process(std::string const& line, Actions const& ... actions)
 {
 	(void)std::initializer_list<int>{0, (actions(line),0)...};
 }
@@ -104,11 +104,11 @@ std::string strip(char const*s, size_t l)
 
 const char nl = '\n';
 const char start_comment_block[] =
-	"\\**************************************"
+	"/**************************************"
 	"*****************************************\n";
 const char end_comment_block[] =
 	"****************************************"
-	"****************************************\\\n";
+	"****************************************/\n";
 
 std::string make_ws(size_t count)
 {
@@ -520,12 +520,12 @@ private:
 						<< nl
 						<< "template<int I>\n"
 						<< "struct Glyphe;\n\n"
-						<< "};\n\n"
 						<< "template<int I>\n"
 						<< "static constexpr int get_encoding(Glyphe<I>)\n"
 						<< "{\n"
 						<< "	return I;\n"
 						<< "}\n"
+						<< "};\n\n"
 						<< nl;
 
 					current_state = &BdfConverter::chars_;
