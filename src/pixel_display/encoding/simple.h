@@ -260,29 +260,56 @@ constexpr std::array<T,N> shift(std::array<T,N> input, type::X displacement)
 		return input;
 	}
 
+	if(std::abs(displacement.value) >= input.size() * 8)
+	{
+		return {};
+	}
+
+	type::X byte_displacement = displacement / 8;
+	type::X bit_displacement = displacement % 8;
+
 	if(displacement < type::X{0})
 	{
-		displacement = displacement * -1;
+		byte_displacement = byte_displacement * -1;
+		bit_displacement = bit_displacement * -1;
+
+		if(byte_displacement.value > 0)
+		{
+			for(size_t i = 0; i<input.size(); ++i)
+			{
+				auto const disp = i+byte_displacement.value;
+				input[i] = (disp < input.size()) ? input[disp] : 0;
+			}
+		}
 
 		for(size_t i = 0; i<input.size()-1; ++i)
 		{
 			input[i] =
-				(input[i] >> (displacement.value)) |
-				(input[i+1] << (sizeof(T)*8) - (displacement.value));
+				(input[i] >> (bit_displacement.value)) |
+				(input[i+1] << (sizeof(T)*8) - (bit_displacement.value));
 		}
 
-		input[input.size()-1] >>= displacement.value;
+		input[input.size()-1] >>= bit_displacement.value;
 	}
 	else
 	{
+		if(byte_displacement.value > 0)
+		{
+			for(int i = input.size()-1; i>=0; --i)
+			{
+				auto const disp = i-byte_displacement.value;
+				input[i] = (disp >= 0) ? input[disp] : 0;
+			}
+		}
+
 		for(size_t i = input.size()-1; i>=1; --i)
 		{
 			input[i] =
-				(input[i] << displacement.value) |
-				(input[i-1] >> (sizeof(T)*8) - displacement.value);
+				(input[i] << bit_displacement.value) |
+				(input[i-1] >> (sizeof(T)*8) - bit_displacement.value);
 		}
 
-		input[0] <<= displacement.value;
+		input[0] <<= bit_displacement.value;
 	}
 
 	return input;

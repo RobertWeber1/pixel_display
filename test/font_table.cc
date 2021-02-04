@@ -344,40 +344,58 @@ TEST_CASE("shift buffer left")
 {
 	REQUIRE(
 		shift("000011111111000000000000"_buf, type::X{0}) ==
-		 "000011111111000000000000"_buf);
+		      "000011111111000000000000"_buf);
 
 	REQUIRE(
 		shift("101010101010101010101010"_buf, type::X{1}) ==
-		 "010101010101010101010101"_buf);
+		      "010101010101010101010101"_buf);
 
 	REQUIRE(
 		shift("000011111110000000000000"_buf, type::X{4}) ==
-		 "000000001111111000000000"_buf);
+		      "000000001111111000000000"_buf);
 
 	REQUIRE(
 		shift("100011111111000010000000"_buf, type::X{7}) ==
-		 "000000010001111111100001"_buf);
+		      "000000010001111111100001"_buf);
+
+	REQUIRE(
+		shift("100011111111000010000000"_buf, type::X{9}) ==
+		      "000000000100011111111000"_buf);
 }
 
 TEST_CASE("shift buffer right")
 {
 	REQUIRE(
 		shift("000011111111000000000000"_buf, type::X{-0}) ==
-		 "000011111111000000000000"_buf);
-
-	REQUIRE(
-		shift("000011111110000000000000"_buf, type::X{-4}) ==
-		 "111111100000000000000000"_buf);
-
-	REQUIRE(
-		shift("100011111111000010000000"_buf, type::X{-7}) ==
-		 "111110000100000000000000"_buf);
+		      "000011111111000000000000"_buf);
 
 	REQUIRE(
 		shift("101010101010101010101010"_buf, type::X{-1}) ==
-		 "010101010101010101010100"_buf);
+		      "010101010101010101010100"_buf);
 
+	REQUIRE(
+		shift("000011111110000000000000"_buf, type::X{-4}) ==
+		      "111111100000000000000000"_buf);
 
+	REQUIRE(
+		shift("100011111111000010000000"_buf, type::X{-7}) ==
+		      "111110000100000000000000"_buf);
+
+	REQUIRE(
+		shift("100011111111000010000000"_buf, type::X{-8}) ==
+		      "111100001000000000000000"_buf);
+
+	REQUIRE(
+		shift("100011111111000010000000"_buf, type::X{-9}) ==
+		      "111000010000000000000000"_buf);
+
+	REQUIRE(
+		shift("100011111111000001000000"_buf, type::X{-10}) ==
+		      "110000010000000000000000"_buf);
+
+		REQUIRE(
+		shift("100011111111000001000000"_buf, type::X{-16}) ==
+		      "010000000000000000"_buf);
 }
 
 
@@ -561,15 +579,16 @@ TEST_CASE("render glyphe")
 {
 	TestOutput out;
 
-	type::X x{0};
+	type::X x{-8};
+	puts("--------");
+	x = HelveticaMedium14_t::render_glyph('M', type::Point{x, type::Y{20}}, out);
+	puts("--------");
 	x = HelveticaMedium14_t::render_glyph('A', type::Point{x, type::Y{2}}, out);
-	x = HelveticaMedium14_t::render_glyph(' ', type::Point{x, type::Y{2}}, out);
 	x = HelveticaMedium14_t::render_glyph(0xf6, type::Point{x, type::Y{2}}, out);
 	x = HelveticaMedium14_t::render_glyph(U'ß', type::Point{x, type::Y{2}}, out);
 
 	out.print_();
 }
-
 
 constexpr char credits[] = "Alles Gute wünschen dir Babett | Cornelius | Daniela | Dorothea | Erik | Hansen | Holger | Jens H | Jörg | Karli | Karsten M | Katharina | Kathrin | Katrin | Klaus B | Lissy | Martin B | Martin H | Michael N | Nikolas | Petra | Ralf D | Ralf N | Ralf S | Rico B | Rico T | Robert P | Stefan M | Steffen K | Thomas K | Udo G | Robert W |";
 auto constexpr w = width<HelveticaMedium14_t>(credits);
@@ -579,14 +598,14 @@ auto constexpr asc = ascent<HelveticaMedium14_t>(credits);
 
 using namespace pixel_display::type;
 
-TEST_CASE("make static output")
-{
-	puts("slkdfjölsadkjdöflksad-k");
-	puts("\033[H");
-	for(int16_t i = 0; i>-int16_t(w); --i)
-	{
-		pixel_display::output::render_buffer<HelveticaMedium14_t, 20, 14>(credits, Point{X{i}, Y{3}}).print_();
-		puts("\033[H");
-		usleep(100000);
-	}
-}
+// TEST_CASE("make static output")
+// {
+// 	puts("slkdfjölsadkjdöflksad-k");
+// 	puts("\033[H");
+// 	for(int16_t i = 0; i>-int16_t(w); --i)
+// 	{
+// 		pixel_display::output::render_buffer<HelveticaMedium14_t, 20, 14>(credits, Point{X{i}, Y{3}}).print_();
+// 		puts("\033[H");
+// 		usleep(100000);
+// 	}
+// }

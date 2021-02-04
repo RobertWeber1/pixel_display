@@ -12,7 +12,7 @@ add_executable( bdf_converter
 ################################################################################
 
 
-add_executable( test-pixel_display
+add_executable( test-pixel_display EXCLUDE_FROM_ALL
 	test/catch.cc
 	test/font_table.cc
 )
@@ -27,5 +27,5 @@ target_compile_options( test-pixel_display
 	PRIVATE -Wall
 	PRIVATE -Wextra
 	PRIVATE -Wpedantic
-	PRIVATE -std=c++14
+	# PRIVATE -std=c++14
 )
