@@ -136,17 +136,13 @@ struct TestOutput
 	template<size_t N>
 	void set(std::array<uint8_t, N> const& data, uint16_t byte_index, uint16_t line)
 	{
-		if(byte_index>=buf[0].size() or line >= 40)
-		{
-			return;
-		}
-
 		for(uint16_t i = 0; i < N; ++i)
 		{
-			if(byte_index+i >= buf[0].size())
-				return;
+			auto const index = uint16_t(byte_index+i);
+			if(index >= buf[0].size())
+				continue;
 
-			buf[line][byte_index+i] |= data[i];
+			buf[line][index] |= data[i];
 		}
 	}
 
