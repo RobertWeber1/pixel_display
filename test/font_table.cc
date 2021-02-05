@@ -4,6 +4,7 @@
 #include <pixel_display/type/encoding.h>
 #include <pixel_display/type/dimensions.h>
 #include <pixel_display/fonts/helvR10.h>
+#include <pixel_display/fonts/skinny_clock.h>
 // #include <pixel_display/fonts/helvR14.h>
 #include <pixel_display/type/bit_map.h>
 #include <pixel_display/encoding/simple.h>
@@ -237,6 +238,21 @@ using HelveticaMedium14_t =
 		U'Ü',
 		U'ß'>;
 
+using SkinnyClock_t =
+	MakeFontTable<
+		pixel_display::font::skinny_clock,
+		encoding::Simple,
+		'0',
+		'1',
+		'2',
+		'3',
+		'4',
+		'5',
+		'6',
+		'7',
+		'8',
+		'9',
+		':'>;
 
 
 } //namespace
@@ -579,13 +595,26 @@ TEST_CASE("render glyphe")
 {
 	TestOutput out;
 
-	type::X x{-8};
-	puts("--------");
-	x = HelveticaMedium14_t::render_glyph('M', type::Point{x, type::Y{20}}, out);
-	puts("--------");
-	x = HelveticaMedium14_t::render_glyph('A', type::Point{x, type::Y{2}}, out);
-	x = HelveticaMedium14_t::render_glyph(0xf6, type::Point{x, type::Y{2}}, out);
-	x = HelveticaMedium14_t::render_glyph(U'ß', type::Point{x, type::Y{2}}, out);
+	type::X x{-1};
+	x = SkinnyClock_t::render_glyph('0', type::Point{x, type::Y{26}}, out);
+	x = SkinnyClock_t::render_glyph('1', type::Point{x, type::Y{26}}, out);
+	x = SkinnyClock_t::render_glyph(':', type::Point{x, type::Y{26}}, out);
+	x = SkinnyClock_t::render_glyph('2', type::Point{x, type::Y{26}}, out);
+	x = SkinnyClock_t::render_glyph('4', type::Point{x, type::Y{26}}, out);
+
+	x = type::X{20};
+	x = SkinnyClock_t::render_glyph('5', type::Point{x, type::Y{13}}, out);
+	x = SkinnyClock_t::render_glyph('6', type::Point{x, type::Y{13}}, out);
+	x = SkinnyClock_t::render_glyph(':', type::Point{x, type::Y{13}}, out);
+	x = SkinnyClock_t::render_glyph('7', type::Point{x, type::Y{13}}, out);
+	x = SkinnyClock_t::render_glyph('8', type::Point{x, type::Y{13}}, out);
+
+	x = type::X{-1};
+	x = SkinnyClock_t::render_glyph('2', type::Point{x, type::Y{0}}, out);
+	x = SkinnyClock_t::render_glyph('3', type::Point{x, type::Y{0}}, out);
+	x = SkinnyClock_t::render_glyph(':', type::Point{x, type::Y{0}}, out);
+	x = SkinnyClock_t::render_glyph('5', type::Point{x, type::Y{0}}, out);
+	x = SkinnyClock_t::render_glyph('9', type::Point{x, type::Y{0}}, out);
 
 	out.print_();
 }
