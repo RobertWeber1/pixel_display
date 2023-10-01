@@ -1,5 +1,7 @@
 #pragma once
 #include <pixel_display/type/dimensions.h>
+#include <pixel_display/detail/string_span.h>
+#include <pixel_display/utf8.h>
 
 namespace pixel_display
 {
@@ -101,26 +103,30 @@ struct FontTable : EncodingStrategy<Font, GLYPHES...>
 		for(int16_t i = 0; i < info.height; ++i)
 		{
 			output.set(
-				Data_t::get_glype_line(
-					info,
-					Point{top_left_corner.get<X>()%8, Y{i}}) &
-				mask,
+				Data_t::bit_and(
+					Data_t::get_glype_line(
+						info,
+						Point{top_left_corner.get<X>()%8, Y{i}}),
+					mask),
 				byte_index-Y{i});
 		}
 
 		return pos + X{info.skip_width};
 	}
 
-	// template<class Output>
-	// static constexpr Point render_bit_mask(
-	// 	int code_point,
-	// 	Point const& pos,
-	// 	Output &)
-	// {
-	// 	auto const& glyph_info = Data_t::get(code_point);
+	template<class Output>
+	static constexpr Point render_text(
+		Output & out,
+		Point pos,
+		detail::StringSpan const& text)
+	{
+		for(size_t  i = 0; i<text.size();)
+		{
+			pos = render_glyph(get_codepoint(&text[i], text.size()-i, i), pos, out);
+		}
 
-	// 	return pos + X{glyph_info.next};
-	// }
+		return pos;
+	}
 };
 
 

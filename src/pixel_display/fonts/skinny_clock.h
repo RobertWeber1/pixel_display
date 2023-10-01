@@ -33,7 +33,7 @@ struct skinny_clock::Glyphe<0x30>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"  []  "
@@ -57,7 +57,7 @@ struct skinny_clock::Glyphe<0x31>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"    []"
@@ -81,7 +81,7 @@ struct skinny_clock::Glyphe<0x32>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"  []  "
@@ -105,7 +105,7 @@ struct skinny_clock::Glyphe<0x33>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"  []  "
@@ -130,7 +130,7 @@ struct skinny_clock::Glyphe<0x34>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"    []"
@@ -154,7 +154,7 @@ struct skinny_clock::Glyphe<0x35>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"[][][]"
@@ -178,7 +178,7 @@ struct skinny_clock::Glyphe<0x36>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"  []  "
@@ -202,7 +202,7 @@ struct skinny_clock::Glyphe<0x37>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"[][][]"
@@ -226,7 +226,7 @@ struct skinny_clock::Glyphe<0x38>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"  []  "
@@ -250,7 +250,7 @@ struct skinny_clock::Glyphe<0x39>
 	using next = Constant<4>;
 	using width = Constant<3>;
 	using height = Constant<13>;
-	using x = Constant<1>;
+	using x = Constant<0>;
 	using y = Constant<0>;
 	using bit_map = decltype(
 		"  []  "
@@ -272,10 +272,10 @@ struct skinny_clock::Glyphe<0x39>
 template<>
 struct skinny_clock::Glyphe<':'>
 {
-	using next = Constant<4>;
+	using next = Constant<2>;
 	using width = Constant<1>;
 	using height = Constant<8>;
-	using x = Constant<2>;
+	using x = Constant<0>;
 	using y = Constant<2>;
 	using bit_map = decltype(
 		"[]"

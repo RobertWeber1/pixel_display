@@ -48,7 +48,20 @@ struct Buffer
 	{
 		for(int i=Height-1; i>=0; --i)
 		{
-			std::cout << buf[i] << std::endl;
+			// std::cout << buf[i] << std::endl;
+			std::cout << '|';
+
+			for(auto const& t : buf[i])
+			{
+				uint8_t mask = 1;
+				for(int i=0; i<8; ++i)
+				{
+					std::cout << ((t&mask)?"[]":"  ");
+					mask<<=1;
+				}
+			}
+
+			std::cout << "|"  << std::endl;
 		}
 	}
 
@@ -73,16 +86,13 @@ struct Buffer
 };
 
 
-template<class FontTable, size_t Width, size_t Height, size_t N>
-constexpr Buffer<Width, Height> render_buffer(
-	char const (&data)[N],
+template<class FontTable, size_t Width, size_t Height>
+constexpr Buffer<Width, Height> fill_new_buffer(
+	detail::StringSpan const& data,
 	type::Point pos)
 {
 	Buffer<Width, Height> out;
-	for(size_t  i = 0; i<N-1;)
-	{
-		pos = FontTable::render_glyph(get_codepoint(&data[i], N-1-i, i), pos, out);
-	}
+	FontTable::render_text(out, pos, data);
 	return out;
 }
 

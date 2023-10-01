@@ -2,7 +2,7 @@
 #include <pixel_display/type/bit_map.h>
 #include <pixel_display/type/data.h>
 #include <pixel_display/detail/index_of.h>
-
+#include <array>
 
 namespace pixel_display
 {
@@ -42,7 +42,6 @@ struct GlypheInfo
 template<class Font, class GlypheInfo, class T>
 constexpr GlypheInfo make_info(size_t offset)
 {
-
 	return {
 		Font::template get_encoding(T{}),
 		static_cast<uint16_t>(offset),
@@ -56,6 +55,7 @@ constexpr GlypheInfo make_info(size_t offset)
 
 //------------------------------------------------------------------------------
 
+inline
 constexpr size_t calc_size(size_t n)
 {
 	return n/16 + ((n%16 != 0) ? 1 : 0);
@@ -186,6 +186,7 @@ constexpr size_t max_glyphe_width()
 
 //------------------------------------------------------------------------------
 
+inline
 uint8_t byte_mask(uint8_t w)
 {
 	switch(w)
@@ -220,7 +221,6 @@ static Buffer glyphe_mask(uint8_t width, type::X displacement = type::X{0})
 
 	return shift(buffer, displacement);
 }
-
 
 template<class T, size_t N>
 std::array<T, N> operator|(
@@ -286,7 +286,7 @@ constexpr std::array<T,N> shift(std::array<T,N> input, type::X displacement)
 		{
 			input[i] =
 				(input[i] >> (bit_displacement.value)) |
-				(input[i+1] << (sizeof(T)*8) - (bit_displacement.value));
+				(input[i+1] << ((sizeof(T)*8) - (bit_displacement.value)));
 		}
 
 		input[input.size()-1] >>= bit_displacement.value;
@@ -306,7 +306,7 @@ constexpr std::array<T,N> shift(std::array<T,N> input, type::X displacement)
 		{
 			input[i] =
 				(input[i] << bit_displacement.value) |
-				(input[i-1] >> (sizeof(T)*8) - bit_displacement.value);
+				(input[i-1] >> ((sizeof(T)*8) - bit_displacement.value));
 		}
 
 		input[0] <<= bit_displacement.value;
@@ -315,21 +315,25 @@ constexpr std::array<T,N> shift(std::array<T,N> input, type::X displacement)
 	return input;
 }
 
+inline
 constexpr size_t calc_buf_size(size_t n)
 {
 	return (n>>3) + ((n&0x7) ? 1 : 0);
 }
 
+inline
 constexpr size_t begin_byte_index(type::Width w, type::Y line)
 {
 	return (w.value * line.value) >> 3;
 }
 
+inline
 constexpr size_t end_byte_index(type::Width w, type::Y line)
 {
 	return ((w.value * (line.value+1))-1) / 8;
 }
 
+inline
 constexpr type::X start_offset(type::Width w, type::Y line)
 {
 	return
@@ -356,6 +360,25 @@ struct Simple
 			}
 		}
 		return false;
+	}
+
+
+	template<class T, size_t N>
+	static constexpr std::array<T, N> bit_and(
+		std::array<T, N> const& lhs,
+		std::array<T, N> const& rhs)
+	{
+		return lhs & rhs;
+	}
+
+	static constexpr size_t glyph_info_size()
+	{
+		return sizeof(infos);
+	}
+
+	static constexpr size_t glyph_data_size()
+	{
+		return sizeof(glyph_data);
 	}
 
 protected:

@@ -1,18 +1,8 @@
 #include "catch.h"
-#include <pixel_display/font_table.h>
 #include "util.h"
-#include <pixel_display/type/encoding.h>
-#include <pixel_display/type/dimensions.h>
-#include <pixel_display/fonts/helvR10.h>
-#include <pixel_display/fonts/skinny_clock.h>
-// #include <pixel_display/fonts/helvR14.h>
-#include <pixel_display/type/bit_map.h>
-#include <pixel_display/encoding/simple.h>
-#include <pixel_display/detail/index_of.h>
-#include <pixel_display/output/buffer.h>
-#include <pixel_display/metrics.h>
 #include <unistd.h>
 
+#include <pixel_display/pixel_font.h>
 
 using namespace pixel_display;
 using namespace pixel_display::encoding;
@@ -130,129 +120,7 @@ struct TestFont::Glyphe<41>
 // 		TestFont,
 // 		encoding::Simple, 0, '(', ')'>;
 
-using HelveticaMedium14_t =
-	MakeFontTable<
-		pixel_display::font::HelveticaMedium14,
-		encoding::Simple,
-		0,
-		' ',
-		'!',
-		'"',
-		'#',
-		'$',
-		'%',
-		'&',
-		'\'',
-		'(',
-		')',
-		'*',
-		'+',
-		',',
-		'-',
-		'.',
-		'/',
-		'0',
-		'1',
-		'2',
-		'3',
-		'4',
-		'5',
-		'6',
-		'7',
-		'8',
-		'9',
-		':',
-		';',
-		'<',
-		'=',
-		'>',
-		'?',
-		'@',
-		'A',
-		'B',
-		'C',
-		'D',
-		'E',
-		'F',
-		'G',
-		'H',
-		'I',
-		'J',
-		'K',
-		'L',
-		'M',
-		'N',
-		'O',
-		'P',
-		'Q',
-		'R',
-		'S',
-		'T',
-		'U',
-		'V',
-		'W',
-		'X',
-		'Y',
-		'Z',
-		'[',
-		'\\',
-		']',
-		'^',
-		'_',
-		'`',
-		'a',
-		'b',
-		'c',
-		'd',
-		'e',
-		'f',
-		'g',
-		'h',
-		'i',
-		'j',
-		'k',
-		'l',
-		'm',
-		'n',
-		'o',
-		'p',
-		'q',
-		'r',
-		's',
-		't',
-		'u',
-		'v',
-		'w',
-		'x',
-		'y',
-		'z',
-		'{',
-		'|',
-		'}',
-		'~',
-		U'ö',
-		U'Ö',
-		U'ä',
-		U'Ä',
-		U'ü',
-		U'Ü',
-		U'ß'>;
 
-using SkinnyClock_t =
-	MakeFontTable<
-		pixel_display::font::skinny_clock,
-		encoding::Simple,
-		'0',
-		'1',
-		'2',
-		'3',
-		'4',
-		'5',
-		'6',
-		'7',
-		'8',
-		'9',
-		':'>;
 
 
 } //namespace
@@ -591,50 +459,4 @@ TEST_CASE("end byte index")
 }
 
 
-TEST_CASE("render glyphe")
-{
-	TestOutput out;
 
-	type::X x{-1};
-	x = SkinnyClock_t::render_glyph('0', type::Point{x, type::Y{26}}, out);
-	x = SkinnyClock_t::render_glyph('1', type::Point{x, type::Y{26}}, out);
-	x = SkinnyClock_t::render_glyph(':', type::Point{x, type::Y{26}}, out);
-	x = SkinnyClock_t::render_glyph('2', type::Point{x, type::Y{26}}, out);
-	x = SkinnyClock_t::render_glyph('4', type::Point{x, type::Y{26}}, out);
-
-	x = type::X{20};
-	x = SkinnyClock_t::render_glyph('5', type::Point{x, type::Y{13}}, out);
-	x = SkinnyClock_t::render_glyph('6', type::Point{x, type::Y{13}}, out);
-	x = SkinnyClock_t::render_glyph(':', type::Point{x, type::Y{13}}, out);
-	x = SkinnyClock_t::render_glyph('7', type::Point{x, type::Y{13}}, out);
-	x = SkinnyClock_t::render_glyph('8', type::Point{x, type::Y{13}}, out);
-
-	x = type::X{-1};
-	x = SkinnyClock_t::render_glyph('2', type::Point{x, type::Y{0}}, out);
-	x = SkinnyClock_t::render_glyph('3', type::Point{x, type::Y{0}}, out);
-	x = SkinnyClock_t::render_glyph(':', type::Point{x, type::Y{0}}, out);
-	x = SkinnyClock_t::render_glyph('5', type::Point{x, type::Y{0}}, out);
-	x = SkinnyClock_t::render_glyph('9', type::Point{x, type::Y{0}}, out);
-
-	out.print_();
-}
-
-constexpr char credits[] = "Alles Gute wünschen dir Babett | Cornelius | Daniela | Dorothea | Erik | Hansen | Holger | Jens H | Jörg | Karli | Karsten M | Katharina | Kathrin | Katrin | Klaus B | Lissy | Martin B | Martin H | Michael N | Nikolas | Petra | Ralf D | Ralf N | Ralf S | Rico B | Rico T | Robert P | Stefan M | Steffen K | Thomas K | Udo G | Robert W |";
-auto constexpr w = width<HelveticaMedium14_t>(credits);
-auto constexpr h = height<HelveticaMedium14_t>(credits);
-auto constexpr desc = descent<HelveticaMedium14_t>(credits);
-auto constexpr asc = ascent<HelveticaMedium14_t>(credits);
-
-using namespace pixel_display::type;
-
-// TEST_CASE("make static output")
-// {
-// 	puts("slkdfjölsadkjdöflksad-k");
-// 	puts("\033[H");
-// 	for(int16_t i = 0; i>-int16_t(w); --i)
-// 	{
-// 		pixel_display::output::render_buffer<HelveticaMedium14_t, 20, 14>(credits, Point{X{i}, Y{3}}).print_();
-// 		puts("\033[H");
-// 		usleep(100000);
-// 	}
-// }

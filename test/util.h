@@ -16,7 +16,7 @@ std::ostream & operator<<(std::ostream & os, std::array<uint8_t, N> const& in)
 		uint8_t mask = 1;
 		for(int i=0; i<8; ++i)
 		{
-			os << ((t&mask)?"##":"  ");
+			os << ((t&mask)?"[]":"  ");
 			mask<<=1;
 		}
 	}
