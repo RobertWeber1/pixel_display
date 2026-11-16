@@ -2,7 +2,7 @@
 #include <stddef.h>
 
 
-namespace pixel_display
+namespace pixel_font
 {
 
 template<class FontTable, size_t N>
@@ -60,4 +60,4 @@ constexpr int ascent(char const (&data)[N])
 }
 
 
-} //namespace pixel_display
+} //namespace pixel_font

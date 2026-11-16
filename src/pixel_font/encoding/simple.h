@@ -1,59 +1,16 @@
 #pragma once
-#include <pixel_display/type/bit_map.h>
-#include <pixel_display/type/data.h>
-#include <pixel_display/detail/index_of.h>
+#include <pixel_font/type/bit_map.h>
+#include <pixel_font/type/data.h>
+#include <pixel_font/detail/index_of.h>
+#include <pixel_font/encoding/glyph_info.h>
 #include <array>
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace encoding
 {
 
-struct GlypheInfo
-{
-	int16_t code_point;
-	uint16_t data_index;
-	uint8_t width;
-	uint8_t height;
-	int8_t dx;
-	int8_t dy;
-	int8_t skip_width;
-
-	constexpr GlypheInfo(
-		int code_point,
-		uint16_t data_index,
-		uint8_t width,
-		uint8_t height,
-		int8_t dx,
-		int8_t dy,
-		int8_t skip_width)
-	: code_point(static_cast<int16_t>(code_point))
-	, data_index(data_index)
-	, width(width)
-	, height(height)
-	, dx(dx)
-	, dy(dy)
-	, skip_width(skip_width)
-	{}
-}__attribute__((packed));
-
-
-template<class Font, class GlypheInfo, class T>
-constexpr GlypheInfo make_info(size_t offset)
-{
-	return {
-		Font::template get_encoding(T{}),
-		static_cast<uint16_t>(offset),
-		T::width::value(),
-		T::height::value(),
-		T::x::value(),
-		T::y::value(),
-		T::next::value()
-	};
-}
-
-//------------------------------------------------------------------------------
 
 inline
 constexpr size_t calc_size(size_t n)
@@ -253,7 +210,7 @@ std::array<T, N> operator&(
 }
 
 template<class T, size_t N>
-constexpr std::array<T,N> shift(std::array<T,N> input, type::X displacement)
+constexpr std::array<T,N> shift(std::array<T, N> input, type::X displacement)
 {
 	if(displacement == type::X{0})
 	{
@@ -362,7 +319,6 @@ struct Simple
 		return false;
 	}
 
-
 	template<class T, size_t N>
 	static constexpr std::array<T, N> bit_and(
 		std::array<T, N> const& lhs,
@@ -437,4 +393,4 @@ constexpr type::Data<byte_count<GLYPHES...>()>
 
 } //namespace encoding
 
-} //namespace pixel_display
+} //namespace pixel_font

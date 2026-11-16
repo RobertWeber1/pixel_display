@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pixel_display
+namespace pixel_font
 {
 
 
@@ -32,4 +32,4 @@ struct Constant
 
 }
 
-} //namespace pixel_display
+} //namespace pixel_font

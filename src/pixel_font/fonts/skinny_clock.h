@@ -1,8 +1,8 @@
 #pragma once
-#include <pixel_display/type/encoding.h>
-#include <pixel_display/type/bit_map.h>
+#include <pixel_font/type/encoding.h>
+#include <pixel_font/type/bit_map.h>
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace font
@@ -10,7 +10,7 @@ namespace font
 
 template<int8_t I>
 using Constant = type::Constant<int8_t, I>;
-using namespace pixel_display::literals;
+using namespace pixel_font::literals;
 
 struct skinny_clock
 {
@@ -290,7 +290,7 @@ struct skinny_clock::Glyphe<':'>
 
 
 
-} // namespace pixel_display
+} // namespace pixel_font
 
 
 } //namespace font

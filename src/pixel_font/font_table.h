@@ -1,9 +1,9 @@
 #pragma once
-#include <pixel_display/type/dimensions.h>
-#include <pixel_display/detail/string_span.h>
-#include <pixel_display/utf8.h>
+#include <pixel_font/type/dimensions.h>
+#include <pixel_font/detail/string_span.h>
+#include <pixel_font/utf8.h>
 
-namespace pixel_display
+namespace pixel_font
 {
 
 using type::X;
@@ -138,4 +138,4 @@ using MakeFontTable =
 		typename F::template Glyphe<CodePoints> ... >;
 
 
-} //namespace pixel_display
+} //namespace pixel_font

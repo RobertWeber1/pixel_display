@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace detail
@@ -34,4 +34,4 @@ constexpr size_t index_of()
 
 } //namespace detail
 
-} //namespace pixel_display
+} //namespace pixel_font

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace type
@@ -229,4 +229,4 @@ using Outline = Pair<Size, Point>;
 
 } //namespace type
 
-} //namespace pixel_display
+} //namespace pixel_font

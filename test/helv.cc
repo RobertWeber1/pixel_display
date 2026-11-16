@@ -1,13 +1,13 @@
-#include <pixel_display/pixel_font.h>
-#include <pixel_display/encoding/simple.h>
-#include <pixel_display/fonts/helvR14.h>
-#include <catch.h>
+#include <catch2/catch_test_macros.hpp>
+#include <pixel_font/pixel_font.h>
+#include <pixel_font/encoding/simple.h>
+#include <pixel_font/fonts/helvR14.h>
 #include <unistd.h> //usleep
 
 using HelveticaMedium14_t =
-	pixel_display::MakeFontTable<
-		pixel_display::font::HelveticaMedium14,
-		pixel_display::encoding::Simple,
+	pixel_font::MakeFontTable<
+		pixel_font::font::HelveticaMedium14,
+		pixel_font::encoding::Simple,
 		0,
 		' ',
 		'!',
@@ -149,10 +149,10 @@ constexpr char credits[] =
 	"Udo G | "
 	"Robert W |";
 
-auto constexpr w = pixel_display::width<HelveticaMedium14_t>(credits);
-auto constexpr h = pixel_display::height<HelveticaMedium14_t>(credits);
-auto constexpr desc = pixel_display::descent<HelveticaMedium14_t>(credits);
-auto constexpr asc = pixel_display::ascent<HelveticaMedium14_t>(credits);
+auto constexpr w = pixel_font::width<HelveticaMedium14_t>(credits);
+auto constexpr h = pixel_font::height<HelveticaMedium14_t>(credits);
+auto constexpr desc = pixel_font::descent<HelveticaMedium14_t>(credits);
+auto constexpr asc = pixel_font::ascent<HelveticaMedium14_t>(credits);
 
 
 TEST_CASE("render credits")
@@ -160,11 +160,11 @@ TEST_CASE("render credits")
 	puts("\033[H");
 	for(int16_t i = 0; i>-int16_t(w); --i)
 	{
-		pixel_display::output::render_buffer<HelveticaMedium14_t, 20, 14>(
+		pixel_font::output::fill_new_buffer<HelveticaMedium14_t, 20, 14>(
 			credits,
-			pixel_display::type::Point{
-				pixel_display::type::X{i},
-				pixel_display::type::Y{3}}).print_();
+			pixel_font::type::Point{
+				pixel_font::type::X{i},
+				pixel_font::type::Y{3}}).print_();
 		puts("\033[H");
 		usleep(10);
 	}

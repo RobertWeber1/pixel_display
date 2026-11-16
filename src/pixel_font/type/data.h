@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace type
@@ -42,4 +42,4 @@ struct Data
 
 } //namespace type
 
-} //namespace pixel_display
+} //namespace pixel_font

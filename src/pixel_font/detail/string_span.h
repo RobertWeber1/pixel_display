@@ -2,7 +2,7 @@
 #include <string>
 #include <string.h>
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace detail
@@ -53,4 +53,4 @@ private:
 
 } //namespace detail
 
-} //namespace pixel_display
+} //namespace pixel_font

@@ -1,11 +1,11 @@
-#include "catch.h"
+#include <catch2/catch_test_macros.hpp>
 #include "util.h"
 #include <unistd.h>
 
-#include <pixel_display/pixel_font.h>
+#include <pixel_font/pixel_font.h>
 
-using namespace pixel_display;
-using namespace pixel_display::encoding;
+using namespace pixel_font;
+using namespace pixel_font::encoding;
 using type::BitMap;
 
 
@@ -127,7 +127,7 @@ struct TestFont::Glyphe<41>
 
 
 
-TEST_CASE()
+TEST_CASE("TestFont")
 {
 	// REQUIRE(HelveticaMedium20_t::count() == 0);
 

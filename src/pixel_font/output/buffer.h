@@ -1,13 +1,13 @@
 #pragma once
-#include <pixel_display/type/dimensions.h>
-#include <pixel_display/utf8.h>
+#include <pixel_font/type/dimensions.h>
+#include <pixel_font/utf8.h>
 #include <iomanip>
 #include <bitset>
 #include <array>
 #include <stddef.h>
 #include <bitset>
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace output
@@ -99,4 +99,4 @@ constexpr Buffer<Width, Height> fill_new_buffer(
 
 } //namespace output
 
-} //namespace pixel_display
+} //namespace pixel_font

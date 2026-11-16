@@ -1,15 +1,15 @@
-#include <pixel_display/pixel_font.h>
-#include <pixel_display/encoding/simple.h>
-#include <pixel_display/fonts/helvR14.h>
+#include <catch2/catch_test_macros.hpp>
+#include <pixel_font/pixel_font.h>
+#include <pixel_font/encoding/simple.h>
+#include <pixel_font/fonts/helvR14.h>
 #include <util.h>
-#include <catch.h>
 #include <unistd.h>
 
 
 using SkinnyClock_t =
-	pixel_display::MakeFontTable<
-		pixel_display::font::skinny_clock,
-		pixel_display::encoding::Simple,
+	pixel_font::MakeFontTable<
+		pixel_font::font::skinny_clock,
+		pixel_font::encoding::Simple,
 		'0',
 		'1',
 		'2',
@@ -24,9 +24,9 @@ using SkinnyClock_t =
 
 TEST_CASE("render glyphe")
 {
-	pixel_display::type::Point pos{
-		pixel_display::type::X{0},
-		pixel_display::type::Y{0}};
+	pixel_font::type::Point pos{
+		pixel_font::type::X{0},
+		pixel_font::type::Y{0}};
 
 	uint8_t hour = 0;
 	uint8_t minute = 0;
@@ -35,7 +35,7 @@ TEST_CASE("render glyphe")
 		char buffer[6];
 		snprintf(buffer, 8, "%02d:%02d", hour, minute);
 		puts("\033[2J");
-		pixel_display::output::fill_new_buffer<SkinnyClock_t, 24, 14>(buffer, pos).print_();
+		pixel_font::output::fill_new_buffer<SkinnyClock_t, 24, 14>(buffer, pos).print_();
 		usleep(1000);
 		minute++;
 

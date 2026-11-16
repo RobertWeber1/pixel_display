@@ -4,6 +4,7 @@
 #include <ostream>
 #include <sstream>
 #include <stdlib.h>
+#include <stdint.h>
 #include <vector>
 #include <set>
 
@@ -504,16 +505,16 @@ private:
 						<< end_comment_block
 						<< nl
 						<< "#pragma once\n"
-						<< "#include <pixel_display/type/encoding.h>\n"
-						<< "#include <pixel_display/type/bit_map.h>\n"
+						<< "#include <pixel_font/type/encoding.h>\n"
+						<< "#include <pixel_font/type/bit_map.h>\n"
 						<< nl
-						<< "namespace pixel_display\n"
+						<< "namespace pixel_font\n"
 						<< "{\n\n"
 						<< "namespace font\n"
 						<< "{\n\n"
 						<< "template<int8_t I>\n"
 						<< "using Constant = type::Constant<int8_t, I>;\n"
-						<< "using namespace pixel_display::literals;\n"
+						<< "using namespace pixel_font::literals;\n"
 						<< nl
 						<< "struct " << family_name << weight << pixel_size << nl
 						<< "{\n"
@@ -568,7 +569,7 @@ public:
 			<< nl
 			<< "} //namespace font\n"
 			<< nl
-			<< "} //namespace pixel_display\n"
+			<< "} //namespace pixel_font\n"
 			<< std::endl;
 	}
 };

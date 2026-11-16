@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace type
@@ -56,4 +56,4 @@ type::BitMap<Cs...> operator "" _make_bitmap();
 
 } //namespace literales
 
-} //namespace pixel_display
+} //namespace pixel_font

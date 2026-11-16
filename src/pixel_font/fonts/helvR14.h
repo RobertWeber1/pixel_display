@@ -30,10 +30,10 @@ Copyright: Copyright (c) 1984, 1987 Adobe Systems Incorporated. All Rights
 ********************************************************************************/
 
 #pragma once
-#include <pixel_display/type/encoding.h>
-#include <pixel_display/type/bit_map.h>
+#include <pixel_font/type/encoding.h>
+#include <pixel_font/type/bit_map.h>
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace font
@@ -41,7 +41,7 @@ namespace font
 
 template<int8_t I>
 using Constant = type::Constant<int8_t, I>;
-using namespace pixel_display::literals;
+using namespace pixel_font::literals;
 
 struct HelveticaMedium20
 {
@@ -19198,5 +19198,5 @@ struct HelveticaMedium20::Glyphe<-2>
 
 } //namespace font
 
-} //namespace pixel_display
+} //namespace pixel_font
 

@@ -4,7 +4,7 @@
 #include <optional>
 #include <cstring>
 
-namespace pixel_display
+namespace pixel_font
 {
 
 enum class Result
@@ -84,7 +84,9 @@ Stream decode_utf8(Stream input, uint32_t default_value)
 
 	if (input.head >= input.end)
 	{
-		inpunnput;
+		input.code_point = default_value;
+		input.result = Result::EncodingError;
+		return input;
 	}
 
 	const uint8_t u2 = static_cast<uint8_t>(*input.head);
@@ -120,5 +122,17 @@ Stream decode_utf8(Stream input, uint32_t default_value)
 }
 
 
+//
+// Convenience wrapper used by FontTable::render_text: decode the code point
+// that starts at `u` and advance `i` past the bytes that were consumed.
+//
+inline int get_codepoint(char const* u, size_t l, size_t & i)
+{
+	Stream input{u, l};
+	input = decode_utf8(input, 0);
+	i += static_cast<size_t>(input.head - u);
+	return static_cast<int>(input.code_point);
+}
 
-} //namespace pixel_display
+
+} //namespace pixel_font

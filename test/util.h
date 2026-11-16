@@ -1,6 +1,7 @@
 #pragma once
-#include <pixel_display/type/dimensions.h>
-#include <pixel_display/type/data.h>
+#include <pixel_font/type/dimensions.h>
+#include <pixel_font/type/data.h>
+#include <array>
 #include <ostream>
 #include <iomanip>
 
@@ -26,7 +27,7 @@ std::ostream & operator<<(std::ostream & os, std::array<uint8_t, N> const& in)
 }
 
 
-namespace pixel_display
+namespace pixel_font
 {
 
 namespace type
@@ -80,14 +81,14 @@ bool operator==(Data<N> const& lhs, Data<N> const& rhs)
 
 } //namespace type
 
-} //namespace pixel_display
+} //namespace pixel_font
 
 //------------------------------------------------------------------------------
 
 
 
 template<class T, T ... Cs>
-std::array<uint8_t, (((sizeof...(Cs))>>3) + (((sizeof...(Cs))&0x7) ? 1 : 0))> operator "" _buf ()
+std::array<uint8_t, (((sizeof...(Cs))>>3) + (((sizeof...(Cs))&0x7) ? 1 : 0))> operator ""_buf ()
 {
 	std::array<uint8_t, (((sizeof...(Cs))>>3) + (((sizeof...(Cs))&0x7) ? 1 : 0))> buffer = {0};
 	char const data[] = {Cs...};
@@ -124,9 +125,9 @@ std::array<uint8_t, (((sizeof...(Cs))>>3) + (((sizeof...(Cs))&0x7) ? 1 : 0))> op
 	return buffer;
 }
 
-using pixel_display::type::Point;
-using pixel_display::type::X;
-using pixel_display::type::Y;
+using pixel_font::type::Point;
+using pixel_font::type::X;
+using pixel_font::type::Y;
 
 struct TestOutput
 {
